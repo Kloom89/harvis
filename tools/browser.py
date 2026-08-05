@@ -144,6 +144,44 @@ def _duck_navegador(bajar: bool):
         log.debug("duck falló", exc_info=True)
 
 
+# Botones de la barra de YT Music (px desde el borde izquierdo/inferior
+# de la ventana, MEDIDOS con captura): ⏮ 78 · ▶ 128 · ⏭ 183, a 40 px del
+# borde inferior.
+_BARRA_X = {"previous": 78, "play": 128, "pause": 128, "next": 183}
+_BARRA_Y = 40
+
+
+def control_musica(accion: str) -> bool:
+    """Click DIRECTO en el botón de la barra de YouTube Music. Las teclas
+    multimedia globales van a la sesión "activa" de Windows, que con
+    varias pestañas de música abiertas suele ser una pestaña PAUSADA
+    equivocada. True si encontró la ventana y clickeó."""
+    import ctypes
+    import time as _t
+    try:
+        import win32gui
+        from tools.windows import _find_window, focus_hwnd
+        x_off = _BARRA_X.get(accion)
+        if x_off is None:
+            return False
+        h = _find_window("youtube music")
+        if not h:
+            return False
+        focus_hwnd(h)
+        _t.sleep(0.35)
+        r = win32gui.GetWindowRect(h)
+        u = ctypes.windll.user32
+        u.SetCursorPos(r[0] + x_off, r[3] - _BARRA_Y)
+        _t.sleep(0.15)
+        u.mouse_event(2, 0, 0, 0, 0)
+        _t.sleep(0.06)
+        u.mouse_event(4, 0, 0, 0, 0)
+        return True
+    except Exception:
+        log.warning("control_musica falló", exc_info=True)
+        return False
+
+
 def _parar_actual():
     """Si YA hay música sonando, la pausa antes de poner otra cosa —
     jamás dos cosas sonando a la vez."""

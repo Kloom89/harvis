@@ -9,9 +9,16 @@ from teclado import MEDIA, media
 
 @kloom_tool("media_key", "Controla la reproducción de medios del sistema. Acciones: play, pause, next, previous, volume_up, volume_down, mute.", {"action": str})
 async def media_key(args):
+    import asyncio
     action = args["action"]
     if action not in MEDIA:
         return f"Acción desconocida '{action}'. Válidas: {', '.join(MEDIA)}."
+    if action in ("play", "pause", "next", "previous"):
+        # con varias pestañas de música, la tecla global va a la sesión
+        # equivocada: atajo directo a la ventana de YouTube Music primero
+        from tools.browser import control_musica
+        if await asyncio.to_thread(control_musica, action):
+            return "Hecho (en YouTube Music)."
     times = 5 if action in ("volume_up", "volume_down") else 1
     for _ in range(times):
         media(action)

@@ -910,11 +910,19 @@ async def main():
                 accion = next((a for rx, a in MUSICA_DIRECTAS
                                if rx.search(st_m)), None)
                 if accion:
-                    from teclado import media as _media
-                    veces = 4 if accion.startswith("volume") else 1
-                    for _ in range(veces):
-                        _media("play" if accion in ("pause", "play")
-                               else accion)
+                    if accion.startswith("volume"):
+                        from teclado import media as _media
+                        for _ in range(4):
+                            _media(accion)
+                    else:
+                        # atajo directo a la ventana de YT Music; si no
+                        # está, tecla multimedia global como fallback
+                        ok = await asyncio.to_thread(
+                            browser.control_musica, accion)
+                        if not ok:
+                            from teclado import media as _media
+                            _media("play" if accion in ("pause", "play")
+                                   else accion)
                     beep_ok()
                     hud.actividad(f"♪ {accion}")
                     log.info("modo música: %s", accion)
