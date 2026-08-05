@@ -25,7 +25,7 @@ def _open(url: str) -> str:
         return "Abierto en el navegador."
 
 
-@kloom_tool("open_url", "Abre una URL en el navegador.", {"url": str})
+@kloom_tool("open_url", "Abre una URL genérica en el navegador. PROHIBIDO para música o playlists (links de music.youtube.com incluidos): esto solo abre la página y NO reproduce nada — para que SUENE usá youtube_music.", {"url": str})
 async def open_url(args):
     url = args["url"]
     if not url.startswith(("http://", "https://")):

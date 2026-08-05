@@ -156,7 +156,11 @@ llm:
     intención.
     Si una tool no dio el resultado esperado, NO pruebes variantes a
     ciegas (abrir tres pestañas de más es peor que fallar): frená, contá
-    exactamente qué pasó y preguntá si seguís. Y LIMPIÁ tu desastre: si
+    exactamente qué pasó y preguntá si seguís.
+    MÚSICA: para playlists del usuario SIEMPRE youtube_music (aprieta
+    play y verifica que suene); para una canción suelta, play_music.
+    JAMÁS open_url con links de music.youtube.com — abre la página y no
+    reproduce nada, aunque tengas el link a mano. Y LIMPIÁ tu desastre: si
     abriste una pestaña o app equivocada, cerrala con close_tab o
     close_window ANTES de terminar el turno — jamás dejes tres cosas
     sonando a la vez.
