@@ -123,6 +123,27 @@ MUSICA_CEREBRO_RE = re.compile(
     r"\b(poner|cambiar|reproducir)\b"
     r"|\bplaylist\b|\blista de\b")
 
+_PEDIR_PLAYLIST_RE = re.compile(
+    r"^(\w+\s+)?(pone|poneme|pon|reproduci)\b|\bplaylist\b|\blista de\b")
+
+
+def _playlist_pedida(texto: str) -> str | None:
+    """Playlist ya aprendida que el usuario está pidiendo poner, o None.
+
+    El nombre propio ya identifica la tool: mandarlo al cerebro son ~15 s
+    de latencia (round trip + búsqueda de tool) para elegir lo único que
+    se podía elegir."""
+    t = sin_tildes(texto)
+    if not _PEDIR_PLAYLIST_RE.search(t):
+        return None
+    try:
+        from tools import browser
+        nombres = browser._playlists()
+    except Exception:
+        return None
+    return next((n for n in nombres if sin_tildes(n) in t), None)
+
+
 ENTER_CHAT_RE = EXIT_CHAT_RE = PRIVACY_RE = None
 ENTER_REDACTOR_RE = EXIT_REDACTOR_RE = ENTER_COACH_RE = RESET_RE = None
 
@@ -1169,6 +1190,35 @@ async def main():
 
         print(f"🧠 «{command}»", flush=True)
         log.info("wake: %r", command)
+
+        pedida = _playlist_pedida(command)
+        if pedida:
+            trazas.nuevo_turno("hud" if typed else "voz", command)
+            hud.actividad(f"♪ {pedida}")
+            oido.mute()
+            t0 = time.monotonic()
+            try:
+                res = await browser.youtube_music.handler({"nombre": pedida})
+            except Exception:
+                log.exception("atajo de playlist falló")
+                res = ""
+            trazas.ev("tool", nombre="youtube_music", ok=bool(res),
+                      dur_ms=int((time.monotonic() - t0) * 1000))
+            sonando = "SONANDO" in res or "sonando, verificado" in res
+            oido.unmute()
+            hud.set_state("idle")
+            if sonando:
+                music_mode = True
+                beep_ok()
+                hud.reply(f"✔ {pedida}")
+            else:
+                beep_error()
+                hud.error_flash()
+                hud.reply(f"✖ {pedida}")
+                await boca.say(f"No pude poner {pedida}, señor.")
+            log.info("atajo playlist %r: %s", pedida,
+                     "sonando" if sonando else "falló")
+            continue
         objetivo = cerebro_coach if (coach_mode and cerebro_coach) \
             else cerebro
         trazas.nuevo_turno("hud" if typed else "voz", command)

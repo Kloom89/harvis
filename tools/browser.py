@@ -294,8 +294,15 @@ async def youtube_music(args):
             await asyncio.to_thread(
                 _abrir_app_musica,
                 f"https://music.youtube.com/watch?list={pid}")
-            await asyncio.sleep(7)   # que cargue el reproductor
-            if await asyncio.to_thread(_audio_navegador) > 0.01:
+            # El reproductor tarda entre 2 y 7 s según cómo venga la red:
+            # se le pregunta al medidor en vez de esperar el peor caso.
+            pico = -1.0
+            for _ in range(18):
+                await asyncio.sleep(0.4)
+                pico = await asyncio.to_thread(_audio_navegador)
+                if pico > 0.01:
+                    break
+            if pico > 0.01:
                 _avisar_musica()
                 return (f"Playlist '{guardado}' sonando, verificado. "
                         "Avisale al usuario que quedás en modo música "

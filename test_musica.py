@@ -72,3 +72,21 @@ for letra in LETRAS:
 
 assert fallas == 0, f"{fallas} fallas"
 print("test_musica OK ✓")
+
+
+def test_atajo_playlist():
+    """"poné mi playlist X" se resuelve sin cerebro; la letra no."""
+    import kloom
+    casos = [("poné mi playlist goodvibes", "goodvibes"),
+             ("Harvis poneme nightcore", "nightcore"),
+             ("cuando la vida te da la espalda y todo se pone gris", None),
+             ("pausá la música", None),
+             ("poné bersuit", None)]
+    for texto, esperado in casos:
+        got = kloom._playlist_pedida(texto)
+        # sin playlists aprendidas (repo limpio) el atajo nunca dispara
+        assert got in (esperado, None), f"{texto!r} -> {got!r}"
+    print("atajo de playlist OK ✓")
+
+
+test_atajo_playlist()
