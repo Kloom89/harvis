@@ -312,7 +312,7 @@ async def main():
         datefmt="%H:%M:%S",
     )
     for noisy in ("faster_whisper", "urllib3", "asyncio", "httpcore", "httpx",
-                  "mcp.server", "openai", "claude_agent_sdk"):
+                  "mcp.server", "openai", "claude_agent_sdk", "comtypes"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
 
     cfg = load_config()
