@@ -70,13 +70,53 @@ async def play_music(args):
         return f"No pude buscar en YouTube: {e}"
 
 
-@kloom_tool("youtube_music", "YouTube Music: para 'mi playlist X' / 'poné mi lista X en YouTube Music'. Abre UNA pestaña con la búsqueda en music.youtube.com — con la sesión del usuario, su playlist aparece primera en Biblioteca. NUNCA uses play_music para playlists (abre videos sueltos de YouTube).", {"query": str})
+# Playlists del usuario en YouTube Music: nombre → ID. Se aprende UNA vez
+# (youtube_music_learn con el link) y de ahí en más watch?list=<ID>
+# arranca a SONAR solo, sin clicks.
+import os as _os
+
+_PLAYLISTS_FILE = _os.path.join(
+    _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
+    "playlists_ytmusic.json")
+
+
+def _playlists() -> dict:
+    try:
+        return json.load(open(_PLAYLISTS_FILE, encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+@kloom_tool("youtube_music", "Reproduce una playlist DEL USUARIO en YouTube Music: si está aprendida, EMPIEZA A SONAR sola. Para 'poné mi playlist X'. Si no la conozco, la respuesta te dice qué pedirle al usuario. NUNCA uses play_music para playlists.", {"nombre": str})
 async def youtube_music(args):
-    r = _open("https://music.youtube.com/search?q="
-              + urllib.parse.quote_plus(args["query"]))
-    return (f"{r} Busqué eso en YouTube Music: su playlist aparece arriba "
-            "de todo (sección Biblioteca). No puedo clickear adentro de la "
-            "página — decile al usuario que le dé play al primer resultado.")
+    nombre = args["nombre"].strip().lower()
+    lisas = _playlists()
+    for guardado, pid in lisas.items():
+        if nombre in guardado or guardado in nombre:
+            r = _open(f"https://music.youtube.com/watch?list={pid}")
+            return (f"{r} La playlist '{guardado}' arranca a sonar sola "
+                    "(URL de reproducción directa). Confirmá al usuario "
+                    "que ya está sonando.")
+    conocidas = ", ".join(lisas) or "ninguna todavía"
+    return (f"No tengo aprendida la playlist '{args['nombre']}' "
+            f"(conozco: {conocidas}). Pedile al usuario que abra la "
+            "playlist una vez en YouTube Music, copie el link y te lo "
+            "pegue en el panel — con eso llamás youtube_music_learn y "
+            "queda aprendida para siempre. NO abras búsquedas a ciegas.")
+
+
+@kloom_tool("youtube_music_learn", "Aprende una playlist del usuario para siempre: recibe el nombre y el LINK que el usuario pegó (music.youtube.com/...list=XXXX). Después youtube_music la reproduce sola.", {"nombre": str, "url": str})
+async def youtube_music_learn(args):
+    import re as _re
+    m = _re.search(r"[?&]list=([\w-]+)", args["url"])
+    if not m:
+        return "Ese link no tiene '?list=' — pedile el link de la playlist."
+    lisas = _playlists()
+    lisas[args["nombre"].strip().lower()] = m.group(1)
+    json.dump(lisas, open(_PLAYLISTS_FILE, "w", encoding="utf-8"),
+              ensure_ascii=False, indent=1)
+    return (f"Aprendida '{args['nombre']}'. Ya puedo reproducirla "
+            "directo cuando la pida.")
 
 
 @kloom_tool("web_answer", "Busca en la web y DEVUELVE los resultados como texto (títulos y resúmenes) para responder una pregunta, sin abrir el navegador. Usar para preguntas de datos: 'quién ganó X', 'cuánto sale Y'.", {"query": str})
@@ -105,4 +145,4 @@ async def web_answer(args):
 
 
 TOOLS = [open_url, web_search, youtube_search, play_music, youtube_music,
-         web_answer]
+         youtube_music_learn, web_answer]
