@@ -21,30 +21,31 @@ except Exception:
 # embebidos en base64 (assets/promos/), rota cada 15 s, clic abre la web.
 _PROMOS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                            "assets", "promos")
+# (slug, nombre, tagline, CTA, color de acento, url)
 _PROMOS_DATA = [
     ("tv-optimizer", "TV Optimizer PRO",
      "Build, test & optimize your TradingView strategy",
-     "START FREE", "https://app.optimizertrading.workers.dev"),
+     "START FREE", "#2de3c3", "https://app.optimizertrading.workers.dev"),
     ("tucora", "TuCora", "Clarity for your relationships",
-     "GET APP", "https://tucora.com.ar"),
+     "GET APP", "#ff5f8f", "https://tucora.com.ar"),
     ("senda-tarot", "Senda Tarot", "Tarot that talks straight",
-     "SEE MORE", "https://kloomstudio.com.ar/en/apps/senda-tarot"),
+     "SEE MORE", "#b48cff", "https://kloomstudio.com.ar/en/apps/senda-tarot"),
     ("gula", "Gula", "Count calories with one photo",
-     "SEE MORE", "https://kloomstudio.com.ar/en/apps/gula"),
+     "SEE MORE", "#ffb43a", "https://kloomstudio.com.ar/en/apps/gula"),
     ("instaunfollowers", "InstaUnfollowers",
      "See who doesn't follow you back",
-     "INSTALL", "https://play.google.com/store/apps/details?id=com.matias.instaunfollowers"),
+     "GET APP", "#ff7ab8", "https://play.google.com/store/apps/details?id=com.matias.instaunfollowers"),
     ("ganancia-real", "Ganancia Real",
      "Prices with real profit for your Tiendanube store",
-     "INSTALL", "https://www.tiendanube.com/tienda-aplicaciones-nube/ganancia-real"),
+     "SEE MORE", "#3ddc84", "https://www.tiendanube.com/tienda-aplicaciones-nube/ganancia-real"),
     ("digitala", "Digitala", "Digital delivery for your Tiendanube store",
-     "SEE MORE", "https://kloomstudio.com.ar/en/apps/digitala"),
+     "SEE MORE", "#4da3ff", "https://kloomstudio.com.ar/en/apps/digitala"),
 ]
 
 
 def _promos_json() -> str:
     out = []
-    for slug, nombre, tag, cta, url in _PROMOS_DATA:
+    for slug, nombre, tag, cta, color, url in _PROMOS_DATA:
         logo = ""
         try:
             ruta = os.path.join(_PROMOS_DIR, f"{slug}.png")
@@ -53,7 +54,7 @@ def _promos_json() -> str:
         except Exception:
             pass
         out.append({"logo": logo, "name": nombre, "tag": tag,
-                    "cta": cta, "url": url})
+                    "cta": cta, "color": color, "url": url})
     return json.dumps(out)
 
 ORB = (96, 96)
@@ -110,23 +111,37 @@ html, body { background: var(--bg); height: 100%; overflow: hidden;
 .muted #orb::before { border-color: #57320f; }
 body.expanded.muted #mini-orb {
   filter: grayscale(1) brightness(.55); box-shadow: none; }
-#promo { display: flex; align-items: center; gap: 9px; cursor: pointer;
-  margin: 6px 12px 0; padding: 6px 10px; border: 1px solid var(--line);
-  border-radius: 11px; overflow: hidden;
-  background: linear-gradient(90deg, #06121d, #081a29 60%, #06121d); }
-#promo:hover { border-color: var(--cyan-dim);
-  box-shadow: 0 0 12px rgba(53, 214, 255, .18); }
-#promo-logo { width: 26px; height: 26px; border-radius: 7px; flex: none; }
+#promo { --pa: #35d6ff; position: relative; display: flex;
+  align-items: center; gap: 9px; cursor: pointer; margin: 6px 12px 0;
+  padding: 7px 10px; border-radius: 11px; overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--pa) 35%, #143047);
+  background:
+    radial-gradient(130% 200% at 100% 50%,
+      color-mix(in srgb, var(--pa) 20%, transparent), transparent 55%),
+    radial-gradient(90% 160% at 0% 50%,
+      color-mix(in srgb, var(--pa) 10%, transparent), transparent 50%),
+    linear-gradient(90deg, #071320, #0a1d2e);
+  transition: box-shadow .3s ease, border-color .3s ease; }
+#promo::after { content: ''; position: absolute; inset: 0;
+  background: linear-gradient(115deg, transparent 30%,
+    rgba(255, 255, 255, .05) 45%, transparent 60%); pointer-events: none; }
+#promo:hover { border-color: color-mix(in srgb, var(--pa) 70%, #143047);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--pa) 30%, transparent); }
+#promo-logo { width: 27px; height: 27px; border-radius: 7px; flex: none;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--pa) 40%, transparent); }
 #promo-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-#promo-name { font-size: 11px; color: #eaf6ff; letter-spacing: .3px;
+#promo-name { font-size: 11px; color: #f2faff; letter-spacing: .3px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#promo-tag { font-size: 10px; color: var(--muted); white-space: nowrap;
+#promo-tag { font-size: 10px; color: #9db8ca; white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis; }
 #promo-cta { flex: none; font-size: 9px; font-weight: 700;
-  letter-spacing: 1.2px; color: var(--cyan); padding: 4px 11px;
-  border: 1px solid var(--cyan-dim); border-radius: 999px;
-  text-shadow: 0 0 8px rgba(53, 214, 255, .5); }
-#promo:hover #promo-cta { background: rgba(53, 214, 255, .12); }
+  letter-spacing: 1.2px; color: var(--pa); padding: 4px 11px;
+  border: 1px solid color-mix(in srgb, var(--pa) 65%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--pa) 10%, transparent);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--pa) 60%, transparent); }
+#promo:hover #promo-cta {
+  background: color-mix(in srgb, var(--pa) 22%, transparent); }
 #mic-btn, #new-btn, #stop-btn { background: none;
   border: 1px solid var(--line); border-radius: 10px; cursor: pointer;
   padding: 0 12px; font-size: 15px; }
@@ -362,6 +377,7 @@ function rotarPromo() {
   document.getElementById('promo-name').textContent = p.name;
   document.getElementById('promo-tag').textContent = p.tag;
   document.getElementById('promo-cta').textContent = p.cta;
+  el.style.setProperty('--pa', p.color || '#35d6ff');
   el.dataset.url = p.url;
 }
 setInterval(rotarPromo, 15000);
