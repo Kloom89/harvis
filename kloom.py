@@ -1033,6 +1033,15 @@ async def main():
             if sin_tildes(command).strip(".!?¿¡, ") in ("senor", "si senor"):
                 awaiting_command_until = time.monotonic() + followup
                 continue
+            if EXIT_CHAT_RE.search(sin_tildes(command)):
+                # "modo normal" / "listo" cierran TAMBIÉN la ventana de
+                # seguimiento. Sin esto seguía escuchando sin wake word y
+                # contestaba cualquier cosa que se dijera cerca.
+                beep_ok()
+                hud.set_state("idle")
+                print("🔇 te escucho cuando me llames", flush=True)
+                log.info("ventana de seguimiento cerrada a pedido")
+                continue
         elif typed:
             command = text
         else:
