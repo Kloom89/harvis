@@ -25,6 +25,8 @@ HARVIS is a JARVIS-style voice assistant that actually **does things on your PC*
 - **Telegram channel**: talk to it from your phone; single-owner pairing.
 - **Observability**: every turn is traced to `turnos.jsonl` (command → brain → each tool call with duration → reply). When something fails, you read *why* instead of guessing.
 
+> The HUD shows a small rotating banner with other [KloomStudio](https://kloomstudio.com.ar) apps — that's how the free version pays for itself. Keeping it on is how you say thanks 😉
+
 ## Requirements
 
 - Windows 11 (uses win32 APIs, WASAPI, UI Automation)

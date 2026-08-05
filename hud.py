@@ -71,6 +71,11 @@ html, body { background: var(--bg); height: 100%; overflow: hidden;
 .muted #orb::before { border-color: #57320f; }
 body.expanded.muted #mini-orb {
   filter: grayscale(1) brightness(.55); box-shadow: none; }
+#promo { font-size: 10.5px; color: var(--muted); padding: 6px 14px 2px;
+  cursor: pointer; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; }
+#promo:hover { color: var(--cyan); text-decoration: underline; }
+#promo::before { content: '✦ '; color: var(--cyan); }
 #mic-btn, #new-btn, #stop-btn { background: none;
   border: 1px solid var(--line); border-radius: 10px; cursor: pointer;
   padding: 0 12px; font-size: 15px; }
@@ -199,6 +204,8 @@ body.skills #entrada { display: none !important; }
   <div id="log"></div>
   <div id="timers"></div>
   <div id="brains"></div>
+  <div id="promo" title="Apps de KloomStudio"
+       onclick="pywebview.api.abrir_url(this.dataset.url)"></div>
   <div id="entrada">
     <button id="mic-btn" title="Micrófono on/off"
             onclick="pywebview.api.toggle_mic()">🎤</button>
@@ -286,6 +293,33 @@ function enviar() {
   if (!i.value.trim()) return;
   pywebview.api.send_text(i.value.trim()); i.value = '';
 }
+// Apps de KloomStudio — la propaganda de la casa. Rota cada 15 s.
+const PROMOS = [
+  ['TV Optimizer PRO — optimizá tus estrategias de TradingView',
+   'https://app.optimizertrading.workers.dev'],
+  ['TuCora — claridad para tus vínculos',
+   'https://tucora.com.ar'],
+  ['Senda Tarot — el tarot que te habla claro',
+   'https://kloomstudio.com.ar/apps/senda-tarot'],
+  ['Gula — calorías con una foto',
+   'https://kloomstudio.com.ar/apps/gula'],
+  ['InstaUnfollowers — quién no te sigue de vuelta',
+   'https://play.google.com/store/apps/details?id=com.matias.instaunfollowers'],
+  ['Ganancia Real — precios que sí dejan ganancia (Tiendanube)',
+   'https://www.tiendanube.com/tienda-aplicaciones-nube/ganancia-real'],
+  ['Digitala — entregas digitales para tu Tiendanube',
+   'https://kloomstudio.com.ar/apps/digitala'],
+];
+let PROMO_I = Math.floor(Math.random() * PROMOS.length);
+function rotarPromo() {
+  const el = document.getElementById('promo');
+  if (!el) return;
+  const p = PROMOS[PROMO_I++ % PROMOS.length];
+  el.textContent = p[0];
+  el.dataset.url = p[1];
+}
+setInterval(rotarPromo, 15000);
+rotarPromo();
 const GRUPOS = {
   charla: 'Modo charla (todo va al cerebro, sin wake word)',
   redactor: 'Modo redactor (anota todo lo dictado)',
@@ -409,6 +443,13 @@ class Hud:
     def abrir_web(self):
         import webbrowser
         webbrowser.open("https://kloomstudio.com.ar")
+        return "ok"
+
+    def abrir_url(self, url: str):
+        """Banner de apps de KloomStudio: solo https, nada raro."""
+        import webbrowser
+        if isinstance(url, str) and url.startswith("https://"):
+            webbrowser.open(url)
         return "ok"
 
     def get_skills_data(self):
@@ -546,7 +587,8 @@ class Hud:
                            self.get_timers, self.toggle_mic,
                            self.get_skills_data, self.save_comandos,
                            self.instalar_skill, self.abrir_web,
-                           self.nueva_conversacion, self.abortar)
+                           self.abrir_url, self.nueva_conversacion,
+                           self.abortar)
         self._ready.set()
         self._js(f"hud.brains({json.dumps(self.brains)})")
         for code in self._pending:
