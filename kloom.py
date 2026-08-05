@@ -1150,15 +1150,21 @@ async def main():
             # del SDK deja el mic muteado para siempre (= parece muerto).
             # El stream habla cada oración apenas el cerebro la produce.
             # F9/⏹ (abort_ev) corta voz y turno al instante.
+            turno_mudo = (pedido_es_musica or music_mode) and not coach_mode
             async with asyncio.timeout(brain_timeout):
                 if coach_mode:
                     pedido = "[modo coach] " + command
-                elif pedido_es_musica or music_mode:
+                elif turno_mudo:
                     pedido = "[modo música] " + command
                 else:
                     pedido = command
-                tarea = asyncio.create_task(
-                    responder_en_vivo(objetivo.ask_stream(pedido)))
+                if turno_mudo:
+                    # música: la acción sin VOZ (no interrumpir el tema);
+                    # el resultado va como ✔ al HUD.
+                    tarea = asyncio.create_task(objetivo.ask(pedido))
+                else:
+                    tarea = asyncio.create_task(
+                        responder_en_vivo(objetivo.ask_stream(pedido)))
                 espera_abort = asyncio.create_task(abort_ev.wait())
                 await asyncio.wait({tarea, espera_abort},
                                    return_when=asyncio.FIRST_COMPLETED)
@@ -1167,8 +1173,9 @@ async def main():
                 reply = tarea.result()
             if not reply:
                 reply = "Hecho, señor."
-                hud.reply(reply)
-                await boca.say(reply)
+                if not turno_mudo:
+                    hud.reply(reply)
+                    await boca.say(reply)
         except _Abortado:
             log.info("turno abortado por el usuario")
             reply = "[cortado]"
@@ -1201,6 +1208,8 @@ async def main():
         for t in (tarea, espera_abort):
             if t is not None and not t.done():
                 t.cancel()
+        if turno_mudo:
+            hud.reply("✔ " + reply)
         # el texto ya se fue streameando al HUD oración por oración
         hud.reply_end()
         print(f"🔊 {reply}", flush=True)
