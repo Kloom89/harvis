@@ -58,7 +58,7 @@ stt:
   no_speech_max: 0.6
   logprob_min: -1.0
   # Sesga la transcripción hacia estas palabras.
-  hotwords: "Harvis, privacidad, cerebro, Groq, Claude, Ollama, Gemini, Kimi"
+  hotwords: "Harvis, privacidad, cerebro, Groq, Claude, Ollama, Gemini, Kimi, subí, bajá, volumen, pausá, siguiente, playlist"
   # Correcciones post-transcripción, antes del parser de comandos.
   # Cada entrada: pattern (regex, (?i) para ignorar mayúsculas) y replace.
   text_corrections:
