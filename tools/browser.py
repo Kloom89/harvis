@@ -126,6 +126,23 @@ def _audio_navegador() -> float:
         return -1.0   # sin pycaw: no se puede verificar
 
 
+def _duck_navegador(bajar: bool):
+    """Ducking: baja el volumen del navegador/reproductor a 25% mientras
+    HARVIS escucha un comando (si no, Whisper transcribe cualquier cosa
+    con la música de fondo) y lo restaura al 100% después."""
+    try:
+        from pycaw.pycaw import AudioUtilities, ISimpleAudioVolume
+        for s in AudioUtilities.GetAllSessions():
+            try:
+                if s.Process and s.Process.name().lower() in _NAVEGADORES:
+                    v = s._ctl.QueryInterface(ISimpleAudioVolume)
+                    v.SetMasterVolume(0.25 if bajar else 1.0, None)
+            except Exception:
+                pass
+    except Exception:
+        log.debug("duck falló", exc_info=True)
+
+
 def _click_play():
     """Click en el ▶ del reproductor de YT Music (barra inferior izquierda,
     posición fija: ~133 px del borde izquierdo, ~45 px del inferior)."""

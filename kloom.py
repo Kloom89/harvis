@@ -443,6 +443,17 @@ async def main():
     pedido_musica = {"on": False}
     browser.ON_MUSICA = lambda: pedido_musica.__setitem__("on", True)
 
+    def duck(bajar: bool, restaurar_en: float = 0):
+        """Baja la música mientras HARVIS espera el comando ("¿Señor?" /
+        ventana de repregunta) — sin esto Whisper no entiende nada con la
+        música de fondo. restaurar_en > 0 agenda la vuelta al 100%."""
+        asyncio.get_running_loop().run_in_executor(
+            None, browser._duck_navegador, bajar)
+        if bajar and restaurar_en > 0:
+            asyncio.get_running_loop().call_later(
+                restaurar_en, lambda: asyncio.get_running_loop()
+                .run_in_executor(None, browser._duck_navegador, False))
+
     from canal_telegram import Telegram
     tg = Telegram(cfg, lambda t: oido.queue.put_nowait(("tg", t)),
                   voice_sink=lambda r: loop.call_soon_threadsafe(
@@ -817,6 +828,7 @@ async def main():
                     oido.mute()
                     print("🔊 ¿Señor?", flush=True)
                     hud.set_state("armed")
+                    duck(True, followup + 5)
                     await boca.say("¿Señor?")
                     oido.unmute()
                     awaiting_command_until = time.monotonic() + followup
@@ -1021,6 +1033,7 @@ async def main():
             oido.mute()
             print("🔊 ¿Señor?", flush=True)
             hud.set_state("armed")
+            duck(True, followup + 5)   # música al 25% mientras escucho
             await boca.say("¿Señor?")
             oido.unmute()
             awaiting_command_until = time.monotonic() + followup
@@ -1190,6 +1203,11 @@ async def main():
         if chat_mode:
             chat_last = time.monotonic()
             hud.set_state("chat")
+        elif music_mode:
+            # seguimos en modo música: nada de ventana de repregunta ni
+            # "te escucho" — el modo ya escucha órdenes de música siempre.
+            hud.actividad("♪ modo música — pausa, siguiente, poné tal "
+                          "tema… «modo normal» para salir")
         elif followup > 0:
             beep_listening()
             hud.set_state("armed")
