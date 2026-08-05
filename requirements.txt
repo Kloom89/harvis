@@ -13,6 +13,8 @@ pywinauto
 pywin32
 PyYAML
 pycaw          # medidor de audio: verificar que la música REALMENTE suena
+aec-audio-processing   # cancelación de eco WebRTC: el mic no escucha la música/TTS
+PyAudioWPatch          # captura loopback WASAPI (lo que suena) para el AEC
 
 # GPU (opcional, recomendado): DLLs de CUDA para faster-whisper.
 # Sin esto cae solo a CPU con el modelo "medium".

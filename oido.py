@@ -35,6 +35,19 @@ class Oido:
         vcfg = cfg.get("vad") or {}
         self.silence_end = float(vcfg.get("silence_end", 1.2))
         self.max_utterance = float(vcfg.get("max_utterance", 30))
+        # AEC: restar del mic lo que suena por los parlantes (música/TTS).
+        self.eco = None
+        acfg = cfg.get("aec") or {}
+        if acfg.get("enabled", True):
+            try:
+                from eco import CancelEco
+                self.eco = CancelEco(
+                    delay_ms=int(acfg.get("delay_ms", 120)),
+                    ns_level=int(acfg.get("ns_level", 2)))
+                log.info("AEC activo (delay %s ms)",
+                         acfg.get("delay_ms", 120))
+            except Exception:
+                log.exception("AEC no disponible — sigo sin cancelación")
         self.ptt_key = (cfg.get("ptt") or {}).get("key", "f8")
         self.abort_key = (cfg.get("ptt") or {}).get("abort_key", "f9")
         self.on_abort = lambda: None   # lo setea kloom: corta el turno
@@ -61,8 +74,11 @@ class Oido:
         self._last_cb = time.monotonic()   # latido: el stream sigue vivo
         if self._muted:
             return
+        frame = indata[:, 0].copy()
+        if self.eco is not None:
+            frame = self.eco.procesar(frame)
         with self._lock:
-            self._buf = np.concatenate([self._buf, indata[:, 0].copy()])
+            self._buf = np.concatenate([self._buf, frame])
             # cap: pre-roll + frase máxima
             cap = int(SAMPLE_RATE * (self.max_utterance + _PRE_ROLL + 1))
             if self._buf.size > cap and not self._ptt_down:

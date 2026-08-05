@@ -73,6 +73,13 @@ stt:
 briefing:
   hora: "09:00"   # buen día con clima + pendientes + Teams (skill briefing_matinal)
 
+aec:
+  # Cancelación de eco (WebRTC): al mic se le resta lo que suena por los
+  # parlantes (música, el propio TTS) vía loopback WASAPI. Medido: ~22 dB.
+  enabled: true
+  delay_ms: 120
+  ns_level: 2   # supresión de ruido 0-3
+
 vad:
   # Silencio que cierra una frase, en segundos. Más bajo = responde antes;
   # muy bajo te corta a mitad de frase si pausás al hablar.
