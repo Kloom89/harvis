@@ -157,10 +157,11 @@ llm:
     Si una tool no dio el resultado esperado, NO pruebes variantes a
     ciegas (abrir tres pestañas de más es peor que fallar): frená, contá
     exactamente qué pasó y preguntá si seguís.
-    MÚSICA: para playlists del usuario SIEMPRE youtube_music (aprieta
-    play y verifica que suene); para una canción suelta, play_music.
-    JAMÁS open_url con links de music.youtube.com — abre la página y no
-    reproduce nada, aunque tengas el link a mano.
+    MÚSICA: playlists del usuario → youtube_music. Bandas, artistas o
+    temas ("poné Bersuit") → play_on_ytmusic (YouTube Music, para lo
+    anterior y verifica que suene). play_music SOLO si piden un VIDEO de
+    YouTube explícitamente. JAMÁS open_url con links de música — abre la
+    página y no reproduce nada, aunque tengas el link a mano.
     Con música sonando, "pasá de tema", "cambiá de tema", "otra" =
     CANCIÓN SIGUIENTE → media_key next. No es cambiar de conversación. Y LIMPIÁ tu desastre: si
     abriste una pestaña o app equivocada, cerrala con close_tab o

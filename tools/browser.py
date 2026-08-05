@@ -67,6 +67,7 @@ async def play_music(args):
     import re as _re
     q = args["query"]
     try:
+        await asyncio.to_thread(_parar_actual)
         html = await asyncio.to_thread(
             _fetch, "https://www.youtube.com/results?search_query="
             + urllib.parse.quote_plus(q))
@@ -143,6 +144,19 @@ def _duck_navegador(bajar: bool):
         log.debug("duck falló", exc_info=True)
 
 
+def _parar_actual():
+    """Si YA hay música sonando, la pausa antes de poner otra cosa —
+    jamás dos cosas sonando a la vez."""
+    import time as _t
+    try:
+        if _audio_navegador() > 0.01:
+            from teclado import media
+            media("play")   # toggle sobre la sesión activa = pausa
+            _t.sleep(0.8)
+    except Exception:
+        pass
+
+
 def _click_play():
     """Click en el ▶ del reproductor de YT Music (barra inferior izquierda,
     posición fija: ~133 px del borde izquierdo, ~45 px del inferior)."""
@@ -172,6 +186,7 @@ async def youtube_music(args):
     lisas = _playlists()
     for guardado, pid in lisas.items():
         if nombre in guardado or guardado in nombre:
+            await asyncio.to_thread(_parar_actual)
             _open(f"https://music.youtube.com/watch?list={pid}")
             await asyncio.sleep(7)   # que cargue el reproductor
             if await asyncio.to_thread(_audio_navegador) > 0.01:
@@ -204,6 +219,45 @@ async def youtube_music(args):
             "playlist una vez en YouTube Music, copie el link y te lo "
             "pegue en el panel — con eso llamás youtube_music_learn y "
             "queda aprendida para siempre. NO abras búsquedas a ciegas.")
+
+
+@kloom_tool("play_on_ytmusic", "Reproduce una BANDA, artista o tema en YouTube Music (radio continua del primer resultado) y VERIFICA que suene. Para 'poné Bersuit' / 'poneme cumbia de los 90'. Pausa solo lo que estuviera sonando antes. Para playlists guardadas del usuario usá youtube_music.", {"query": str})
+async def play_on_ytmusic(args):
+    import asyncio
+    import re as _re
+    q = args["query"]
+    try:
+        # la búsqueda de music.youtube.com es una app JS (fetch pelado no
+        # trae resultados): se busca en YouTube común y se REPRODUCE en
+        # YouTube Music, que acepta cualquier videoId.
+        html = await asyncio.to_thread(
+            _fetch, "https://www.youtube.com/results?search_query="
+            + urllib.parse.quote_plus(q))
+        m = _re.search(r'"videoId":"([\w-]{11})"', html)
+    except Exception as e:
+        log.warning("play_on_ytmusic: %s", e)
+        m = None
+    if not m:
+        return (f"No encontré nada para '{q}' en YouTube Music. "
+                "Decíselo al usuario tal cual.")
+    vid = m.group(1)
+    await asyncio.to_thread(_parar_actual)
+    # watch con radio (&list=RDAMVM...): sigue con temas parecidos
+    _open(f"https://music.youtube.com/watch?v={vid}&list=RDAMVM{vid}")
+    await asyncio.sleep(7)
+    if await asyncio.to_thread(_audio_navegador) > 0.01:
+        _avisar_musica()
+        return (f"'{q}' sonando en YouTube Music (radio continua), "
+                "verificado. Avisale que quedás en modo música.")
+    await asyncio.to_thread(_click_play)
+    await asyncio.sleep(1.5)
+    pico = await asyncio.to_thread(_audio_navegador)
+    if pico > 0.01:
+        _avisar_musica()
+        return (f"'{q}' SONANDO en YouTube Music, verificado con el "
+                "medidor. Avisale que quedás en modo música.")
+    return (f"Abrí '{q}' en YouTube Music y cliqueé play, pero el medidor "
+            "dice que NO suena. Decíselo al usuario tal cual.")
 
 
 @kloom_tool("youtube_music_learn", "Aprende una playlist del usuario para siempre: recibe el nombre y el LINK que el usuario pegó (music.youtube.com/...list=XXXX). Después youtube_music la reproduce sola.", {"nombre": str, "url": str})
@@ -246,4 +300,4 @@ async def web_answer(args):
 
 
 TOOLS = [open_url, web_search, youtube_search, play_music, youtube_music,
-         youtube_music_learn, web_answer]
+         play_on_ytmusic, youtube_music_learn, web_answer]
