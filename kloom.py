@@ -830,13 +830,11 @@ async def main():
                                          margen=3.5 if music_mode else 0.0)):
                     log.info("wake por huella (whisper no entendió)")
                     beep_wake()
-                    oido.mute()
                     print("🔊 ¿Señor?", flush=True)
                     hud.set_state("armed")
                     duck(True, followup + 5)
-                    await boca.say("¿Señor?")
-                    oido.unmute()
                     awaiting_command_until = time.monotonic() + followup
+                    await boca.say("¿Señor?")
                 continue
             if log_all_speech:
                 log.debug("oído: %r", text)
@@ -951,6 +949,11 @@ async def main():
             # aunque el VAD la cierre con la ventana ya vencida.
             command = text.strip()
             awaiting_command_until = 0.0
+            # eco del propio "¿Señor?" (el mic queda abierto mientras lo
+            # dice): se ignora y la ventana sigue abierta.
+            if sin_tildes(command).strip(".!?¿¡, ") in ("senor", "si senor"):
+                awaiting_command_until = time.monotonic() + followup
+                continue
         elif typed:
             command = text
         else:
@@ -1044,13 +1047,14 @@ async def main():
             oido.unmute()
             continue
         if not command:
-            oido.mute()
+            # MIC ABIERTO mientras dice "¿Señor?": el usuario suele encadenar
+            # "Harvis... poné X" y el comando caía justo en el mute. El eco
+            # del propio "¿Señor?" se filtra en la ventana.
             print("🔊 ¿Señor?", flush=True)
             hud.set_state("armed")
             duck(True, followup + 5)   # música al 25% mientras escucho
-            await boca.say("¿Señor?")
-            oido.unmute()
             awaiting_command_until = time.monotonic() + followup
+            await boca.say("¿Señor?")
             continue
 
         hud.heard(("📱 " if por_tg else "") + command)
