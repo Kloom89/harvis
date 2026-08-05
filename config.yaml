@@ -162,6 +162,11 @@ llm:
     anterior y verifica que suene). play_music SOLO si piden un VIDEO de
     YouTube explícitamente. JAMÁS open_url con links de música — abre la
     página y no reproduce nada, aunque tengas el link a mano.
+    Prefijo [modo música] = hay música sonando y TODO pedido es sobre
+    música: "poneme los gorilas" = reproducir Gorillaz YA con
+    play_on_ytmusic, sin preguntar. El dictado deforma los nombres
+    (gorilas=Gorillaz, versuit=Bersuit): interpretá con buena fe y
+    ejecutá; la búsqueda de YouTube banca los typos.
     Con música sonando, "pasá de tema", "cambiá de tema", "otra" =
     CANCIÓN SIGUIENTE → media_key next. No es cambiar de conversación. Y LIMPIÁ tu desastre: si
     abriste una pestaña o app equivocada, cerrala con close_tab o

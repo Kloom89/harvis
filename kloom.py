@@ -922,7 +922,8 @@ async def main():
             log.info("modo charla: cerrado por inactividad")
             print("💬 modo charla cerrado (silencio)", flush=True)
 
-        if comando_musica is not None:
+        pedido_es_musica = comando_musica is not None
+        if pedido_es_musica:
             command = comando_musica
         elif chat_mode:
             command = text.strip()
@@ -1150,7 +1151,12 @@ async def main():
             # El stream habla cada oración apenas el cerebro la produce.
             # F9/⏹ (abort_ev) corta voz y turno al instante.
             async with asyncio.timeout(brain_timeout):
-                pedido = ("[modo coach] " + command) if coach_mode else command
+                if coach_mode:
+                    pedido = "[modo coach] " + command
+                elif pedido_es_musica or music_mode:
+                    pedido = "[modo música] " + command
+                else:
+                    pedido = command
                 tarea = asyncio.create_task(
                     responder_en_vivo(objetivo.ask_stream(pedido)))
                 espera_abort = asyncio.create_task(abort_ev.wait())
