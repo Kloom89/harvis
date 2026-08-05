@@ -54,6 +54,24 @@ ORB = (96, 96)
 PANEL = (380, 600)
 MARGIN = 16
 
+
+def _pantalla():
+    """Área útil del escritorio (sin taskbar) en las MISMAS unidades que
+    usa mover ventanas (lógicas, virtualizadas por DPI). webview.screens
+    da píxeles FÍSICOS: con escala de Windows >100% el orbe caía medio
+    afuera de la pantalla."""
+    import ctypes
+
+    class _RECT(ctypes.Structure):
+        _fields_ = [("l", ctypes.c_long), ("t", ctypes.c_long),
+                    ("r", ctypes.c_long), ("b", ctypes.c_long)]
+    r = _RECT()
+    if ctypes.windll.user32.SystemParametersInfoW(0x0030, 0,
+                                                  ctypes.byref(r), 0):
+        return r.r, r.b
+    u = ctypes.windll.user32
+    return u.GetSystemMetrics(0), u.GetSystemMetrics(1)
+
 HTML = """<!doctype html><html><head><meta charset="utf-8"><style>
 :root {
   --bg: #050b12; --panel: #0a1420; --line: #12283a;
@@ -501,12 +519,11 @@ class Hud:
 
     # ---------- API expuesta a JS (corre en thread del webview) ----------
     def toggle(self):
-        import webview
-        scr = webview.screens[0]
         self.expanded = not self.expanded
         w, h = PANEL if self.expanded else ORB
+        ancho, alto = _pantalla()
         self.window.resize(w, h)
-        self.window.move(scr.width - w - MARGIN, scr.height - h - 56)
+        self.window.move(ancho - w - MARGIN, alto - h - MARGIN)
         self._js(f"hud.expanded({json.dumps(self.expanded)})")
 
     def send_text(self, text: str):
@@ -696,13 +713,13 @@ def serve_main_thread(timeout: float = 60):
         log.warning("HUD deshabilitado (pywebview no carga: %s)", e)
         threading.Event().wait()          # mantener vivo el proceso
         return
-    scr = webview.screens[0]
+    ancho, alto = _pantalla()
     hud.window = webview.create_window(
         "HARVIS", html=HTML.replace("__AVATAR__", AVATAR_URI)
                           .replace("__PROMOS__", _promos_json()),
         frameless=True, easy_drag=True,
         on_top=True, width=ORB[0], height=ORB[1],
-        x=scr.width - ORB[0] - MARGIN, y=scr.height - ORB[1] - 56,
+        x=ancho - ORB[0] - MARGIN, y=alto - ORB[1] - MARGIN,
         background_color="#050b12")
     hud.window.events.loaded += hud._js_flush
     webview.start(gui="edgechromium", private_mode=True)
