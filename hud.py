@@ -49,7 +49,7 @@ def _promos_json() -> str:
                     "cta": cta, "color": color, "url": url})
     return json.dumps(out)
 
-ORB = (82, 82)
+ORB = (140, 76)      # cápsula: avatar + botón de privacidad
 PANEL = (380, 600)
 MARGIN = 16
 
@@ -95,11 +95,26 @@ html, body { background: var(--bg); height: 100%; overflow: hidden;
 
 /* ---------- orbe ---------- */
 #orb-wrap { position: fixed; inset: 0; display: flex; align-items: center;
-  justify-content: center; cursor: pointer; }
-#orb { width: 68px; height: 68px; border-radius: 50%; position: relative;
+  justify-content: center; gap: 8px;
+  background:
+    radial-gradient(120% 160% at 15% 0%, #103048, transparent 60%),
+    radial-gradient(120% 160% at 100% 100%, #0a2740, transparent 55%),
+    linear-gradient(150deg, #071a2a, #040d15);
+  border: 1px solid #14344b; border-radius: 999px; }
+#orb { width: 58px; height: 58px; border-radius: 50%; position: relative;
+  flex: none; cursor: pointer;
   background: url(__AVATAR__) center/cover, #071a28;
   box-shadow: 0 0 10px 2px rgba(53, 214, 255, .35);
   transition: box-shadow .4s ease, filter .4s ease; }
+#orb-mute { width: 32px; height: 32px; flex: none; border-radius: 50%;
+  border: 1px solid var(--line); background: rgba(4, 16, 26, .75);
+  color: #7fb6cf; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; transition: color .2s, border-color .2s; }
+#orb-mute:hover { color: var(--cyan); border-color: var(--cyan-dim); }
+.muted #orb-mute { color: var(--amber); border-color: var(--amber);
+  background: #241505; }
+#orb-mute .tachado { display: none; }
+.muted #orb-mute .tachado { display: block; }
 #orb::before { content: ''; position: absolute; inset: -4px;
   border-radius: 50%; border: 2px solid transparent;
   transition: border-color .3s ease; }
@@ -291,7 +306,15 @@ body.skills #entrada { display: none !important; }
 #send-btn:hover { box-shadow: 0 0 12px rgba(53, 214, 255, .45); }
 </style></head><body class="idle">
 
-<div id="orb-wrap" onclick="pywebview.api.toggle()"><div id="orb"></div></div>
+<div id="orb-wrap">
+  <div id="orb" title="Abrir panel" onclick="pywebview.api.toggle()"></div>
+  <button id="orb-mute" title="Privacidad: apagar/prender el micrófono"
+          onclick="pywebview.api.toggle_mic()"><svg class="ic"
+    viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/>
+    <path d="M18.5 11.5a6.5 6.5 0 0 1-13 0"/>
+    <line x1="12" y1="18" x2="12" y2="21"/>
+    <line class="tachado" x1="4" y1="20" x2="20" y2="4"/></svg></button>
+</div>
 
 <div id="panel">
   <header>
@@ -557,18 +580,15 @@ class Hud:
         import ctypes
         return ctypes.windll.user32.FindWindowW(None, "HARVIS")
 
-    def _forma_orbe(self, activar: bool):
-        """Modo orbe = ventana CIRCULAR (SetWindowRgn): pywebview fuerza un
-        ancho mínimo de ~120 px y el rectángulo sobrante quedaba feo a los
-        costados. El panel expandido vuelve a rectángulo completo."""
+    def _forma_orbe(self, orbe: bool):
+        """Recorta la ventana (SetWindowRgn) para que no se vea el
+        rectángulo del sistema: cápsula en modo orbe, esquinas redondeadas
+        en el panel."""
         import ctypes
         try:
             u, g = ctypes.windll.user32, ctypes.windll.gdi32
             hwnd = self._hwnd()
             if not hwnd:
-                return
-            if not activar:
-                u.SetWindowRgn(hwnd, 0, True)
                 return
 
             class _R(ctypes.Structure):
@@ -577,26 +597,23 @@ class Hud:
             r = _R()
             u.GetWindowRect(hwnd, ctypes.byref(r))
             w, h = r.r - r.l, r.b - r.t
-            d = min(w, h)
-            x0, y0 = (w - d) // 2, (h - d) // 2
-            u.SetWindowRgn(hwnd, g.CreateEllipticRgn(x0, y0, x0 + d,
-                                                     y0 + d), True)
+            radio = h if orbe else 28
+            u.SetWindowRgn(hwnd, g.CreateRoundRectRgn(0, 0, w + 1, h + 1,
+                                                      radio, radio), True)
         except Exception:
-            log.debug("forma del orbe falló", exc_info=True)
+            log.debug("forma de la ventana falló", exc_info=True)
 
     def toggle(self):
         self.expanded = not self.expanded
         esc = _escala()
         w, h = [int(v * esc) for v in (PANEL if self.expanded else ORB)]
         ancho, alto = _pantalla()
-        self._forma_orbe(False)
         self.window.resize(w, h)
         self.window.move(ancho - w - MARGIN, alto - h - MARGIN)
 
         def _acomodar():
             self._ajustar_posicion()
-            if not self.expanded:
-                self._forma_orbe(True)
+            self._forma_orbe(not self.expanded)
         threading.Timer(0.2, _acomodar).start()
         self._js(f"hud.expanded({json.dumps(self.expanded)})")
 
