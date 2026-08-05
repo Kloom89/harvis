@@ -1,96 +1,158 @@
 <p align="center">
-  <img src="assets/harvis.png" width="120" alt="HARVIS">
+  <img src="assets/hero.png" alt="HARVIS — the open-source voice AI assistant for Windows">
 </p>
 
-<h1 align="center">HARVIS</h1>
-<p align="center"><b>An open, hackable, voice-first AI butler for your Windows PC</b><br>
-by <a href="https://kloomstudio.com.ar">KloomStudio.com.ar</a></p>
+<p align="center">
+  <b>Your Windows PC. Controlled by voice. Powered by the AI you choose.</b><br>
+  An open-source, hackable <b>voice AI assistant</b> for Windows — by
+  <a href="https://kloomstudio.com.ar">KloomStudio.com.ar</a>
+</p>
+
+<p align="center">
+  <img alt="Personal use" src="https://img.shields.io/badge/free%20for-personal%20use-3dd68c?style=flat-square">
+  <img alt="Windows" src="https://img.shields.io/badge/Windows%2011-supported-35d6ff?style=flat-square">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.12%2B-35d6ff?style=flat-square">
+  <img alt="Offline wake word" src="https://img.shields.io/badge/wake%20word-100%25%20local-3dd68c?style=flat-square">
+  <img alt="Brains" src="https://img.shields.io/badge/brains-Claude%20·%20Groq%20·%20Ollama%20·%20OpenAI%20·%20Gemini-35d6ff?style=flat-square">
+</p>
 
 ---
 
-HARVIS is a JARVIS-style voice assistant that actually **does things on your PC**: opens apps, reads your Microsoft Teams, drafts WhatsApp messages by contact name, sets timers, takes a screenshot and *sees* it, checks your homelab over SSH, and talks back with natural streaming TTS — all hands-free, powered by the LLM of your choice.
+Most AI assistants stop at conversation. **HARVIS keeps going.**
 
-*(The assistant speaks Spanish out of the box — prompts and voice are fully configurable in `config.yaml`.)*
+Say its name and it wakes up **on your machine** — no cloud microphone, no
+push-to-talk. Then ask it to open an app, put on a playlist, read your Teams out
+loud, draft a WhatsApp to a contact by name, look at a screenshot and explain the
+error, or check the containers on your homelab over SSH.
 
-## Features
+**You pick the brain.** Claude, Groq, Ollama, OpenAI, Gemini, Kimi — HARVIS
+handles the voice, the tools and the orchestration; your model does the
+thinking.
 
-- **Multi-brain**: Claude (Agent SDK), Groq/Llama, Ollama (local), OpenAI, Gemini, Kimi — switch by voice: *"Harvis, cambiá el cerebro a groq"*. Every brain gets the same tools.
-- **Wake word without cloud**: Whisper (faster-whisper, GPU) + phonetic regex + fuzzy matching + **your own voice fingerprint** (record 6 takes with `grabar_harvis.py`; MFCC+DTW acoustic matching rescues the wake word even when Whisper mangles it).
-- **Real tools**: windows/apps, media keys, weather, timers & alarms, browser, screenshots with vision, WhatsApp (draft-then-confirm, never sends alone), Microsoft Teams desktop reading, read-only SSH homelab, Obsidian-style vault search/notes, persistent memory that survives restarts.
-- **Modes**: follow-up window (Alexa-style), *modo charla* (free conversation), *modo redactor* (free unlimited dictation → paste anywhere), *modo coach* (a confrontational ontological coach with its own brain and session diary).
-- **Skills**: drop a `.py` in `skills/` (or install from the HUD) and HARVIS gains tools, prompt context and background **watchers** — this is where the community comes in.
-- **HUD**: floating always-on-top orb → panel with live-streaming chat, brain selector, timers, skills manager (edit voice commands and even the wake word), privacy toggle, new-conversation and abort buttons.
-- **Proactive**: morning briefing (weather + pending + Teams), nightly self-reflection (it updates its own memory of you), homelab watcher that warns when a container dies.
-- **Interruptible**: F9 or ⏹ shuts it up and aborts the turn instantly.
-- **Telegram channel**: talk to it from your phone; single-owner pairing.
-- **Auto-updates**: it checks the repo daily and tells you when there's a new version — say *"actualizate"* and it pulls, installs deps and restarts itself (git installs only).
-- **Observability**: every turn is traced to `turnos.jsonl` (command → brain → each tool call with duration → reply). When something fails, you read *why* instead of guessing.
+**Need something it can't do yet?** Drop one Python file into `skills/` and it
+learns a new trick. No SDK, no boilerplate.
 
-> The HUD shows a small rotating banner with other [KloomStudio](https://kloomstudio.com.ar) apps — that's how the free version pays for itself. Keeping it on is how you say thanks 😉
+<p align="center">
+  <img src="assets/hud-panel.png" width="330" alt="HARVIS HUD">
+  &nbsp;&nbsp;
+  <img src="assets/hud-capsule.png" width="200" alt="HARVIS idle capsule">
+</p>
 
-## Requirements
+<p align="center"><i>A floating capsule that breathes while it listens — click it and the full HUD opens.</i></p>
 
-- Windows 11 (uses win32 APIs, WASAPI, UI Automation)
-- Python 3.12+
-- A microphone
-- NVIDIA GPU recommended (Whisper large-v3; falls back to CPU/medium)
-- At least one LLM: a [Claude](https://claude.com) subscription/API, a free [Groq](https://groq.com) key, or local [Ollama](https://ollama.com)
+## What it feels like
 
-## Install
+| You say | HARVIS does |
+|---|---|
+| *"Harvis"* | Wakes up, answers *"¿Señor?"*, keeps the mic open for your command |
+| *"…what did they write me on Teams?"* | Reads the Teams desktop app and summarizes it out loud |
+| *"…play my nightcore playlist and turn it down"* | Opens YouTube Music, hits play, checks the audio meter, lowers the volume |
+| *"…tell Ana I'm running ten minutes late"* | Drafts the WhatsApp and **waits for your OK** before sending |
+| *"…take a screenshot and tell me what this error is"* | Captures the screen, sends it to a vision model, explains the traceback |
+| *"…is the homelab up?"* | SSHes in read-only and reports the containers |
+| *"…switch the brain to groq"* | Same tools, different LLM, mid-conversation |
+| **F9** | Shuts it up instantly and aborts the turn |
+
+## Why HARVIS
+
+**Your voice stays on your PC.** The wake word and the speech recognition are
+local (Whisper). It even learns *your* voice: record six takes of you saying the
+name and it matches on sound, so it still wakes up when the recognizer writes
+"harley" or "javier". No always-on cloud microphone. Ever.
+
+**It hears you over your own music.** Real echo cancellation (WebRTC + WASAPI
+loopback, ~22 dB measured), so *"Harvis, next song"* works with the speakers
+blasting.
+
+**Use the AI you already like.** Claude, Groq, Ollama (local and free), OpenAI,
+Gemini, Kimi — switch by voice or from the HUD, mid-conversation. Every model
+gets the exact same tools, because tools never import a vendor SDK.
+
+**It doesn't just answer.** Opens apps and windows, controls music and media,
+reads Teams, drafts WhatsApp, sets timers, reads the screen with vision, checks
+your homelab over SSH, searches your notes, and remembers things across
+restarts.
+
+**Modes that fit how you talk.** Follow-up window (Alexa-style), chat mode (no
+wake word), dictation mode (talk, then paste anywhere), music mode (it notices
+music is playing, only takes music commands and replies with a silent ✓ instead
+of talking over the song) and coach mode.
+
+**Extend it in minutes.** A new capability is one Python file in `skills/` —
+tools, prompt context and background watchers included. Install it from the HUD
+without restarting.
+
+**Built to be debugged.** Every turn is traced to `turnos.jsonl`: command, brain,
+each tool call with its duration, reply. Tools verify their own effect — it
+checks the audio meter before claiming the music is playing. When it fails, you
+find out why.
+
+## Install (about two minutes)
 
 ```bat
-git clone https://github.com/<you>/harvis
+git clone https://github.com/Kloom89/harvis
 cd harvis
 python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
+kloom.cmd
 ```
+
+Say **"Harvis"** — it answers, then you talk. Or click the capsule and type.
+
+**Requirements:** Windows 11 · Python 3.12+ · a microphone · an NVIDIA GPU
+recommended (Whisper large-v3; falls back to CPU/medium) · at least one LLM.
 
 ### Bring your own keys
 
-HARVIS ships with **no credentials** — every brain runs on *your* account.
-Keys go in **environment variables, never in files** (the config only names
-the variable, e.g. `api_key_env: GROQ_API_KEY`):
+HARVIS ships with **zero credentials** — every brain runs on *your* account, and
+keys live in **environment variables, never in files** (the config only names
+the variable, e.g. `api_key_env: GROQ_API_KEY`).
 
 | Brain | Get a key | Set it |
 |---|---|---|
 | **Claude** (default) | [Claude Code / Agent SDK](https://claude.com/claude-code) — log in once with your own subscription or API key | handled by the SDK login |
-| **Groq** (free tier, fast) | [console.groq.com/keys](https://console.groq.com/keys) | `setx GROQ_API_KEY gsk_...` |
-| **Ollama** (local, free) | [ollama.com](https://ollama.com) — no key at all | — |
+| **Groq** (free tier, fastest) | [console.groq.com/keys](https://console.groq.com/keys) | `setx GROQ_API_KEY gsk_...` |
+| **Ollama** (local, free, offline) | [ollama.com](https://ollama.com) — no key at all | — |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) | `setx OPENAI_API_KEY sk-...` |
 | **Gemini** | [aistudio.google.com](https://aistudio.google.com/apikey) | `setx GEMINI_API_KEY ...` |
 | **Kimi** | [platform.moonshot.ai](https://platform.moonshot.ai) | `setx MOONSHOT_API_KEY ...` |
 | Telegram (optional) | [@BotFather](https://t.me/BotFather) | `setx TELEGRAM_BOT_TOKEN 123:abc` |
 
-You only need **one** brain to start — Groq's free tier or local Ollama are
-the zero-cost paths. A brain without its key simply fails to connect and
-HARVIS tells you; the rest keep working.
+One brain is enough to start. **Groq's free tier or a local Ollama cost you
+nothing.** A brain without its key simply fails to connect and HARVIS says so;
+the others keep working.
 
-Run:
-
-```bat
-kloom.cmd
-```
-
-Say **"Harvis"** — it answers *"¿Señor?"* — then speak your command. Or click the orb and type.
-
-### Teach it your voice (recommended)
+### Teach it your voice (2 minutes, worth it)
 
 ```bat
 .venv\Scripts\python.exe grabar_harvis.py
 ```
 
-Six takes of you saying "Harvis". It auto-calibrates a threshold and from then on the wake word also matches on **sound**, not just Whisper's transcript.
+Six takes of you saying the wake word. It auto-calibrates a threshold, and from
+then on the wake word also matches acoustically — so it still wakes up when the
+speech recognizer writes "harley", "harvest" or "javier".
 
-## Configuration
+## More than the mic
 
-Everything lives in [`config.yaml`](config.yaml): wake word and aliases, VAD pauses, TTS voice, brains and models, morning briefing hour, and per-tool settings (homelab SSH host, vault path, projects dir — empty = tool disabled, HARVIS will politely say so).
+- **Telegram** — talk to it from your phone, by text *or* voice note. Single-owner pairing.
+- **Proactive** — morning briefing (weather + pending + Teams), nightly
+  self-reflection where it updates its own memory of you, watchers that warn you
+  when a container dies.
+- **Auto-updates** — it checks the repo daily; say *"update yourself"* and it
+  pulls, installs dependencies and restarts itself.
+- **Rename it** — HARVIS is just the default. From the HUD you can change the
+  wake word to anything, in any language, and the whole app renames itself.
+
+> The HUD shows a small rotating banner with other
+> [KloomStudio](https://kloomstudio.com.ar) apps — that's how the free version
+> pays for itself. Leaving it on is how you say thanks 😉
 
 ## Write a skill
 
-A skill is one Python file in `skills/`. Full guide: [SKILLS.md](SKILLS.md).
+One Python file in `skills/`. Full guide: **[SKILLS.md](SKILLS.md)**.
 
 ```python
-"""My skill: what it does (first line shows in the HUD)."""
+"""My skill: what it does (this first line shows in the HUD)."""
 from registry import kloom_tool
 
 PROMPT = "Context the LLM gets about this skill."
@@ -107,48 +169,98 @@ async def WATCHER(avisar, cfg):     # optional: background loop
     await avisar("Sir, something happened.")
 ```
 
-Install via the HUD (**SKILLS → + Instalar skill**) — it hot-reloads, no restart. Pull requests with new skills are very welcome.
+Install it from the HUD (**⚙ SKILLS → ＋ Install skill**) — it hot-reloads, no
+restart. **Pull requests with new skills are very welcome**; that's the whole
+point of publishing this.
 
-## Architecture
+## Under the hood
 
 ```
 oido.py      mic, VAD, push-to-talk, self-healing audio stream
+eco.py       WebRTC echo cancellation (WASAPI loopback reference)
 stt.py       faster-whisper + anti-hallucination filters + wake protections
 huella.py    acoustic wake-word fingerprint (MFCC + DTW, zero deps)
 kloom.py     orchestrator: wake → modes → brain → voice
 cerebro.py   brain factory + Claude Agent SDK driver
 cerebro_jarvis.py  OpenAI-compatible driver (Groq/Ollama/OpenAI/Gemini/Kimi)
 registry.py  canonical Tool format — tools never import a vendor SDK
-boca.py      streaming Edge-TTS pipeline (speaks while still thinking)
+boca.py      streaming Edge-TTS pipeline (it speaks while still thinking)
 hud.py       pywebview floating HUD
 skills/      community-extensible skills (tools + prompt + watchers)
 tools/       built-in toolset
 trazas.py    per-turn observability (turnos.jsonl)
 ```
 
+Everything is configurable in [`config.yaml`](config.yaml): wake word and
+aliases, VAD timings, TTS voice, brains and models, briefing hour, and per-tool
+settings (SSH host, vault path, projects dir — leave one empty and that tool
+politely disables itself).
+
 ## Privacy
 
-- Everything runs on **your** machine; audio never leaves it (Whisper is local). Only the text of your commands goes to the LLM you configured.
-- `privacy.log_all_speech` and `save_wake_audio` are **off** by default in this repo.
-- The voice fingerprint dataset (`dataset/`) and all runtime logs are gitignored.
+- Everything runs on **your** machine. **Audio never leaves your PC** — Whisper
+  is local. Only the text of your commands goes to the LLM you chose.
+- One click on the capsule mutes the microphone completely (privacy mode).
+- `log_all_speech` and `save_wake_audio` are **off** by default.
+- Your voice fingerprint (`dataset/`) and every runtime log are gitignored.
 
-## License
+## Language
 
-[MIT](LICENSE) — © KloomStudio · [kloomstudio.com.ar](https://kloomstudio.com.ar)
+HARVIS speaks **Spanish out of the box** (that's what the screenshots show) —
+the wake word, prompts, voice and command phrasings all live in `config.yaml`,
+so pointing it at an English voice and English prompts is a config change, not a
+fork. PRs that make the built-in prompts multilingual are welcome.
+
+## License — personal use, not for sale
+
+HARVIS is released under the
+[PolyForm Noncommercial 1.0.0](LICENSE) license.
+
+**You can** use it, modify it, fork it, publish your skills and share it with
+whoever you want, for personal projects.
+
+**You cannot** sell HARVIS, or sell a product or service built on it, without
+permission. Want a commercial license?
+Write to [KloomStudio](https://kloomstudio.com.ar).
+
+© 2026 KloomStudio · [kloomstudio.com.ar](https://kloomstudio.com.ar)
+
+If HARVIS saved you time, give the repo a ⭐. If you built something
+interesting with it, open an issue and show us.
 
 ---
 
 <details>
-<summary><b>README en español</b></summary>
+<summary><b>Léeme en español</b></summary>
 
-HARVIS es un mayordomo por voz estilo JARVIS que **hace cosas de verdad** en tu PC con Windows: abre apps, te lee Teams, redacta WhatsApps por nombre de contacto, pone timers, saca una captura y la *ve*, consulta tu homelab por SSH y te contesta con voz natural en streaming — con el modelo de IA que elijas (Claude, Groq, Ollama local, OpenAI, Gemini, Kimi).
+**HARVIS es un asistente de IA por voz, open source, para Windows —
+gratis para uso personal, no se puede vender.** Decís su
+nombre y te escucha, piensa y **hace**: abre apps, pone la playlist que
+querías, te lee Teams, redacta un WhatsApp por nombre de contacto, saca una
+captura y *ve* qué error tira, revisa tu homelab por SSH y te contesta con voz
+natural mientras todavía está pensando.
 
-**Instalar**: cloná el repo, `python -m venv .venv`, `pip install -r requirements.txt`, keys por variables de entorno (`setx GROQ_API_KEY ...`), y corré `kloom.cmd`. Decí **"Harvis"** y dale órdenes.
+- **El wake word no sale de tu PC**: Whisper local + fonética + tu **huella de
+  voz** (grabás seis tomas y te reconoce por sonido, no solo por transcripción).
+- **Te escucha con la música puesta**: cancelación de eco WebRTC real con
+  referencia por loopback WASAPI (~22 dB medidos).
+- **El cerebro lo elegís vos**: Claude, Groq, Ollama (local y gratis), OpenAI,
+  Gemini, Kimi. Se cambia por voz o desde el HUD, y todos usan las mismas tools.
+- **Modos**: charla, redactor (dictado libre), música (detecta que hay música
+  sonando, solo acepta órdenes de música y responde con un ✓ silencioso) y
+  coach.
+- **Skills**: un `.py` en `skills/` suma tools, contexto y vigías de fondo; se
+  instala desde el HUD sin reiniciar. Guía en [SKILLS.md](SKILLS.md).
 
-**Enseñale tu voz**: `grabar_harvis.py` graba 6 tomas tuyas diciendo "Harvis" y calibra una huella acústica — el wake word funciona aunque Whisper escriba cualquier cosa.
-
-**Skills de la comunidad**: un archivo `.py` en `skills/` suma herramientas, contexto y vigías de fondo. Guía completa en [SKILLS.md](SKILLS.md). Se instalan desde el HUD sin reiniciar.
+**Instalar**: cloná el repo, `python -m venv .venv`,
+`.venv\Scripts\pip install -r requirements.txt`, poné tus keys por variables de
+entorno (`setx GROQ_API_KEY ...`) y corré `kloom.cmd`. Decí **"Harvis"**.
 
 Todo corre en tu máquina: el audio nunca sale de tu PC.
+
+**Licencia**: [PolyForm Noncommercial 1.0.0](LICENSE). Usalo, modificalo,
+forkealo y compartilo para proyectos personales. Lo que no podés hacer es
+venderlo, ni vender un producto o servicio construido sobre él. ¿Licencia
+comercial? Escribinos a [KloomStudio](https://kloomstudio.com.ar).
 
 </details>
