@@ -93,10 +93,16 @@ async def youtube_music(args):
     lisas = _playlists()
     for guardado, pid in lisas.items():
         if nombre in guardado or guardado in nombre:
+            import asyncio
             r = _open(f"https://music.youtube.com/watch?list={pid}")
-            return (f"{r} La playlist '{guardado}' arranca a sonar sola "
-                    "(URL de reproducción directa). Confirmá al usuario "
-                    "que ya está sonando.")
+            # el navegador bloquea el autoplay: cuando el reproductor cargó,
+            # la tecla multimedia PLAY arranca la sesión recién abierta.
+            await asyncio.sleep(6)
+            from teclado import media
+            media("play")
+            return (f"{r} Playlist '{guardado}' abierta y le di play con "
+                    "la tecla multimedia. Confirmá al usuario que ya "
+                    "debería estar sonando.")
     conocidas = ", ".join(lisas) or "ninguna todavía"
     return (f"No tengo aprendida la playlist '{args['nombre']}' "
             f"(conozco: {conocidas}). Pedile al usuario que abra la "
