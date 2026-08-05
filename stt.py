@@ -13,6 +13,7 @@ for _d in _dirs:
     os.add_dll_directory(_d)
 
 import re
+import time
 
 import numpy as np
 from faster_whisper import WhisperModel
@@ -83,9 +84,24 @@ class Stt:
         peak = float(np.abs(audio).max())
         if 0.002 < peak < 0.35:
             audio = audio * min(0.5 / peak, 15.0)
-        segs, _ = self.model.transcribe(audio, language=self.language,
-                                        beam_size=1, vad_filter=True,
-                                        hotwords=self.hotwords)
+        # Un fallo de Whisper (CUDA OOM cuando la GPU está exigida) NO puede
+        # matar a HARVIS: reintento corto y si no, se descarta la frase.
+        def _correr():
+            s, _ = self.model.transcribe(audio, language=self.language,
+                                         beam_size=1, vad_filter=True,
+                                         hotwords=self.hotwords)
+            return list(s)   # materializa: los errores saltan ACÁ, no después
+        try:
+            segs = _correr()
+        except Exception as e:
+            log.warning("whisper falló (%s) — reintento en 2 s",
+                        str(e)[:120])
+            time.sleep(2)
+            try:
+                segs = _correr()
+            except Exception:
+                log.exception("whisper falló de nuevo; descarto la frase")
+                return ""
         # Con música o ruido de fondo Whisper alucina frases de su corpus de
         # YouTube ("Gracias", "Suscríbete al canal"). Se descartan por
         # confianza baja del segmento, no por lista negra de frases.
