@@ -135,11 +135,20 @@ body.expanded.muted #mini-orb {
   text-shadow: 0 0 8px color-mix(in srgb, var(--pa) 60%, transparent); }
 #promo:hover #promo-cta {
   background: color-mix(in srgb, var(--pa) 22%, transparent); }
-#mic-btn, #new-btn, #stop-btn { background: none;
+#mic-btn, #new-btn, #stop-btn {
+  background: linear-gradient(180deg, #0b2334, #081a29);
   border: 1px solid var(--line); border-radius: 10px; cursor: pointer;
-  padding: 0 12px; font-size: 15px; }
-#new-btn:hover, #stop-btn:hover { border-color: var(--cyan-dim); }
-.muted #mic-btn { border-color: var(--amber); background: #241505; }
+  width: 38px; flex: none; display: flex; align-items: center;
+  justify-content: center; color: #7fb6cf;
+  transition: color .2s, border-color .2s, box-shadow .2s; }
+#mic-btn:hover, #new-btn:hover, #stop-btn:hover { color: var(--cyan);
+  border-color: var(--cyan-dim);
+  box-shadow: 0 0 10px rgba(53, 214, 255, .25); }
+.ic { width: 16px; height: 16px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#stop-btn .ic { fill: currentColor; stroke: none; }
+.muted #mic-btn { border-color: var(--amber); background: #241505;
+  color: var(--amber); }
 
 /* ---------- panel ---------- */
 #panel { display: none; height: 100%; flex-direction: column; }
@@ -248,9 +257,11 @@ body.skills #entrada { display: none !important; }
   border: 1px solid var(--line); border-radius: 10px; color: var(--text);
   padding: 9px 12px; font-size: 13px; outline: none; }
 #entrada input:focus { border-color: var(--cyan-dim); }
-#entrada button { background: linear-gradient(135deg, #1691bd, #35d6ff);
-  color: #04222e; border: 0; border-radius: 10px; padding: 0 16px;
-  font-weight: 600; cursor: pointer; }
+#send-btn { background: linear-gradient(135deg, #1691bd, #35d6ff);
+  color: #04222e; border: 0; border-radius: 10px; width: 42px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; }
+#send-btn:hover { box-shadow: 0 0 12px rgba(53, 214, 255, .45); }
 </style></head><body class="idle">
 
 <div id="orb-wrap" onclick="pywebview.api.toggle()"><div id="orb"></div></div>
@@ -278,14 +289,23 @@ body.skills #entrada { display: none !important; }
   </div>
   <div id="entrada">
     <button id="mic-btn" title="Micrófono on/off"
-            onclick="pywebview.api.toggle_mic()">🎤</button>
+            onclick="pywebview.api.toggle_mic()"><svg class="ic"
+      viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/>
+      <path d="M18.5 11.5a6.5 6.5 0 0 1-13 0"/>
+      <line x1="12" y1="18" x2="12" y2="21"/></svg></button>
     <button id="new-btn" title="Conversación nueva (borra el hilo actual)"
-            onclick="pywebview.api.nueva_conversacion()">🔄</button>
+            onclick="pywebview.api.nueva_conversacion()"><svg class="ic"
+      viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 1 1-2.5-6l2.5 2.4"/>
+      <polyline points="20.7 3.3 20.7 8.6 15.4 8.6"/></svg></button>
     <button id="stop-btn" title="Cortala (F9): calla la voz y aborta el turno"
-            onclick="pywebview.api.abortar()">⏹</button>
+            onclick="pywebview.api.abortar()"><svg class="ic"
+      viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11"
+      rx="2.5"/></svg></button>
     <input id="cmd" placeholder="Escribile a Harvis…"
            onkeydown="if(event.key==='Enter')enviar()">
-    <button onclick="enviar()">➤</button>
+    <button id="send-btn" title="Enviar" onclick="enviar()"><svg class="ic"
+      viewBox="0 0 24 24"><path d="M21 3 10.5 13.5"/>
+      <path d="M21 3l-6.5 18-3.5-8-8-3.5z"/></svg></button>
   </div>
 </div>
 
