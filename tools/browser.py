@@ -205,8 +205,21 @@ def _abrir_app_musica(url: str) -> str:
         import win32gui
         vent = _ventana_ytmusic()
         if vent and vent[1] == "app":
-            win32gui.PostMessage(vent[0], win32con.WM_CLOSE, 0, 0)
+            h_viejo = vent[0]
+            try:
+                from tools.windows import focus_hwnd
+                focus_hwnd(h_viejo)
+                _t.sleep(0.2)
+            except Exception:
+                pass
+            win32gui.PostMessage(h_viejo, win32con.WM_CLOSE, 0, 0)
             _t.sleep(0.7)
+            # Si está reproduciendo, YT Music pregunta "¿Desea salir?" y
+            # queda TRABADO ahí: Enter = botón default "Salir".
+            if win32gui.IsWindow(h_viejo) and win32gui.IsWindowVisible(h_viejo):
+                from pynput.keyboard import Controller, Key
+                Controller().tap(Key.enter)
+                _t.sleep(0.6)
         subprocess.Popen([exe, f"--app={url}"])
         return "Abierto en la app de YouTube Music."
     except Exception as e:
