@@ -11,6 +11,18 @@ from typing import Any, Callable
 
 _JSON_TYPES = {str: "string", int: "integer", float: "number", bool: "boolean"}
 
+# Callback opcional (lo setea kloom): se llama con el NOMBRE de la tool al
+# arrancar su ejecución — el HUD muestra "Leyendo Teams…" en vivo.
+ON_TOOL = None
+
+
+def _avisar_tool(nombre: str):
+    if ON_TOOL is not None:
+        try:
+            ON_TOOL(nombre)
+        except Exception:
+            pass
+
 
 @dataclass
 class Tool:
@@ -66,6 +78,7 @@ def to_sdk(t: Tool):
     async def wrapper(args: dict[str, Any], _t=t):
         import time as _time
         from trazas import ev
+        _avisar_tool(_t.name)
         _t0 = _time.monotonic()
         try:
             r = await _t.handler(args)

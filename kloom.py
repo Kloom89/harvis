@@ -390,6 +390,34 @@ async def main():
         if cfg.get("display_name", "Harvis") != "Harvis":
             hud.set_name(cfg["display_name"])
 
+    # Estados granulares en el HUD: "Leyendo Teams…" en vez de "pensando…"
+    # a secas. registry avisa al ARRANCAR cada tool, con cualquier driver.
+    _ACTIVIDAD = [
+        ("teams", "Leyendo Teams…"), ("whatsapp", "Escribiendo WhatsApp…"),
+        ("play_music", "Poniendo música…"), ("web_answer", "Buscando en internet…"),
+        ("browser", "Usando el navegador…"), ("screenshot", "Mirando la pantalla…"),
+        ("cerebro_", "Buscando en el vault…"), ("homelab", "Consultando el homelab…"),
+        ("code_", "Leyendo código…"), ("project", "Revisando el proyecto…"),
+        ("open_app", "Abriendo la aplicación…"), ("close_window", "Cerrando la ventana…"),
+        ("timer", "Con los timers…"), ("alarm", "Programando la alarma…"),
+        ("weather", "Consultando el clima…"), ("get_time", "Mirando la hora…"),
+        ("remember", "Anotando…"), ("forget", "Borrando el dato…"),
+        ("recall", "Haciendo memoria…"), ("redactor", "Con el dictado…"),
+        ("send_to_claude", "Delegando a Claude Code…"),
+        ("media_key", "Controlando la música…"),
+        ("harvis_update", "Actualizándome…"),
+    ]
+
+    def _mostrar_actividad(nombre):
+        for pref, texto in _ACTIVIDAD:
+            if pref in nombre:
+                hud.actividad(texto)
+                return
+        hud.actividad(f"Usando {nombre.replace('_', ' ')}…")
+
+    import registry as _registry
+    _registry.ON_TOOL = _mostrar_actividad
+
     from canal_telegram import Telegram
     tg = Telegram(cfg, lambda t: oido.queue.put_nowait(("tg", t)))
     if tg.enabled:
@@ -667,6 +695,7 @@ async def main():
             except Exception:
                 log.exception("reset de conversación falló")
                 beep_error()
+                hud.error_flash()
                 hud.aviso("No pude reiniciar la conversación.")
             _drenar_resets()
             if not privacy:
@@ -928,6 +957,7 @@ async def main():
                 log.exception("switch a %s falló", target)
                 reply = f"No pude cambiar a {target.capitalize()}, señor."
                 beep_error()
+                hud.error_flash()
             print(f"🔊 {reply}", flush=True)
             hud.reply(reply)
             await boca.say(reply)
@@ -985,12 +1015,14 @@ async def main():
             reply = ("Eso me estaba llevando demasiado y lo corté, señor. "
                      "Puede que haya quedado a medio hacer.")
             beep_error()
+            hud.error_flash()
             hud.reply(reply)
             await boca.say(reply)
         except Exception as e:
             log.exception("cerebro reventó")
             reply = "Se me rompió algo procesando eso, señor."
             beep_error()
+            hud.error_flash()
             hud.reply(reply)
             await boca.say(reply)
         for t in (tarea, espera_abort):

@@ -17,6 +17,15 @@ try:
 except Exception:
     AVATAR_URI = ""
 
+# Inter embebida (assets/fonts): tipografía moderna sin depender de internet.
+_FONT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                     "assets", "fonts", "inter-latin.woff2")
+try:
+    FONT_URI = ("data:font/woff2;base64,"
+                + base64.b64encode(open(_FONT, "rb").read()).decode())
+except Exception:
+    FONT_URI = ""
+
 # --- Banner de apps de KloomStudio (mismo que la versión open source).
 _PROMOS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                            "assets", "promos")
@@ -83,6 +92,9 @@ def _escala():
         return 1.0
 
 HTML = """<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face { font-family: 'Inter'; font-style: normal;
+  font-weight: 100 900; font-display: swap;
+  src: url(__FONT__) format('woff2'); }
 :root {
   --bg: #050b12; --panel: #0a1420; --line: #12283a;
   --cyan: #35d6ff; --cyan-dim: #1a5a75; --amber: #ffb547;
@@ -90,8 +102,8 @@ HTML = """<!doctype html><html><head><meta charset="utf-8"><style>
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { background: var(--bg); height: 100%; overflow: hidden;
-  font: 13px/1.45 'Segoe UI', system-ui, sans-serif; color: var(--text);
-  user-select: none; }
+  font: 13px/1.5 'Inter', 'Segoe UI Variable Display', 'Segoe UI',
+    system-ui, sans-serif; color: var(--text); user-select: none; }
 
 /* ---------- orbe ---------- */
 /* El fondo va en el BODY y la forma la da el recorte de la ventana
@@ -121,33 +133,51 @@ body:not(.expanded) { background: #0b2134; }
   border-radius: 50%; border: 2px solid transparent;
   transition: border-color .3s ease; }
 
-.idle #orb { animation: breathg 3.2s ease-in-out infinite; }
+/* Idle: respiración MUY lenta */
+.idle #orb { animation: breathg 5.5s ease-in-out infinite; }
 @keyframes breathg {
   50% { transform: scale(1.05);
         box-shadow: 0 0 13px 3px rgba(53, 214, 255, .55); } }
 
 .armed #orb { box-shadow: 0 0 14px 2px rgba(53, 214, 255, .6); }
 .armed #orb::before { border-color: var(--cyan);
-  animation: pulse 1s ease-in-out infinite; }
+  animation: pulse 1.2s ease-in-out infinite; }
 @keyframes pulse { 50% { transform: scale(1.1); opacity: .4; } }
 
-.thinking #orb { box-shadow: 0 0 14px 2px rgba(255, 181, 71, .55); }
+/* Pensando: rotación (anillo ámbar) */
+.thinking #orb { box-shadow: 0 0 14px 2px rgba(255, 181, 71, .55);
+  animation: latido 2.4s ease-in-out infinite; }
+@keyframes latido { 50% { transform: scale(1.02); } }
 .thinking #orb::before { border-color: var(--amber);
   border-top-color: transparent; border-right-color: transparent;
-  animation: spin 1s linear infinite; }
+  animation: spin 1.1s cubic-bezier(.45, .1, .55, .9) infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.speaking #orb { animation: talkg .5s ease-in-out infinite; }
-@keyframes talkg {
-  50% { box-shadow: 0 0 16px 3px rgba(53, 214, 255, .8); } }
+/* Hablando: ondas que emanan del avatar */
+.speaking #orb { box-shadow: 0 0 12px 2px rgba(53, 214, 255, .6); }
+.speaking #orb::before, .speaking #orb::after { content: '';
+  position: absolute; inset: -2px; border-radius: 50%;
+  border: 2px solid var(--cyan); opacity: 0;
+  animation: onda 1.6s ease-out infinite; }
+.speaking #orb::after { animation-delay: .8s; }
+@keyframes onda {
+  0% { transform: scale(.96); opacity: .65; }
+  100% { transform: scale(1.28); opacity: 0; } }
 
 .chat #orb { box-shadow: 0 0 14px 2px rgba(61, 214, 140, .6); }
 .chat #orb::before { border-color: var(--green);
   animation: pulse 2s ease-in-out infinite; }
 
+/* Privacidad: gris, quieto */
 .muted #orb { box-shadow: 0 0 6px rgba(255, 181, 71, .25);
   filter: grayscale(1) brightness(.55); }
 .muted #orb::before { border-color: #57320f; }
+
+/* Error: rojo tenue, transitorio */
+.error #orb { box-shadow: 0 0 14px 3px rgba(255, 92, 92, .45);
+  animation: errorg 1.8s ease-in-out; }
+.error #orb::before { border-color: rgba(255, 92, 92, .8); }
+@keyframes errorg { 0%, 60% { filter: saturate(.6) brightness(.9); } }
 body.expanded.muted #mini-orb {
   filter: grayscale(1) brightness(.55); box-shadow: none; }
 #promo { --pa: #35d6ff; position: relative; display: flex;
@@ -197,15 +227,24 @@ body.expanded.muted #mini-orb {
   color: var(--amber); }
 
 /* ---------- panel ---------- */
+/* Profundidad: gradiente vertical, borde con alpha cian, luz interna
+   arriba y glow difuso — nada de placa plana. */
 #panel { display: none; height: 100%; flex-direction: column;
-  background: var(--bg); border: 1px solid var(--line);
-  border-radius: 14px; overflow: hidden; }
+  background: linear-gradient(180deg, #091829, var(--bg) 42%);
+  border: 1px solid rgba(53, 214, 255, .16);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06),
+              inset 0 0 70px rgba(16, 48, 74, .30); }
 body.expanded #orb-wrap { display: none; }
 body.expanded #panel { display: flex; }
 
-header { display: flex; align-items: center; gap: 10px;
-  padding: 12px 14px; border-bottom: 1px solid var(--line);
-  background: linear-gradient(180deg, #081524, var(--bg)); cursor: move; }
+header { display: flex; align-items: center; gap: 10px; position: relative;
+  padding: 12px 14px; border-bottom: 1px solid rgba(53, 214, 255, .10);
+  background: linear-gradient(180deg, #0a1a2c, rgba(5, 11, 18, 0));
+  cursor: move; }
+header::after { content: ''; position: absolute; left: 8%; right: 8%;
+  bottom: -1px; height: 1px; background: linear-gradient(90deg,
+    transparent, rgba(53, 214, 255, .45), transparent); }
 #mini-orb { width: 30px; height: 30px; border-radius: 50%; flex: none;
   background: url(__AVATAR__) center/cover, #0a2a3d;
   box-shadow: 0 0 10px rgba(53, 214, 255, .7); cursor: pointer; }
@@ -221,11 +260,17 @@ h1:hover #marca { text-decoration: underline; }
 #marca { font-size: 10px; letter-spacing: 1.2px; color: #7de4ff;
   font-weight: 700; white-space: nowrap;
   text-shadow: 0 0 8px rgba(53, 214, 255, .55); }
-#skills-btn { font-size: 11px; letter-spacing: 1px; color: var(--muted);
-  border: 1px solid var(--line); border-radius: 20px; padding: 3px 10px;
-  background: none; cursor: pointer; }
+#skills-btn { font-size: 10.5px; letter-spacing: 1.4px; color: var(--muted);
+  border: 1px solid rgba(53, 214, 255, .18); border-radius: 8px;
+  padding: 4px 10px; background: rgba(10, 25, 38, .6); cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  transition: color .25s ease, border-color .25s ease, box-shadow .25s ease; }
+#skills-btn::before { content: '⚙'; font-size: 12.5px;
+  transition: transform .45s ease; }
+#skills-btn:hover::before { transform: rotate(70deg); }
 #skills-btn:hover, body.skills #skills-btn { color: var(--cyan);
-  border-color: var(--cyan-dim); }
+  border-color: var(--cyan-dim);
+  box-shadow: 0 0 8px rgba(53, 214, 255, .18); }
 
 /* ---------- vista skills ---------- */
 #skills-view { display: none; flex: 1; overflow-y: auto; padding: 10px 14px;
@@ -266,18 +311,39 @@ body.skills #entrada { display: none !important; }
   border-radius: 10px; padding: 9px 11px; color: var(--text);
   font-size: 11px; line-height: 1.5; font-weight: 400;
   box-shadow: 0 6px 18px rgba(0, 0, 0, .6); }
-#estado-line { font-size: 11px; color: var(--muted); padding: 6px 14px 0; }
+/* Línea de estado con punto de actividad: el usuario SIEMPRE sabe qué
+   está pasando ("pensando…", "Leyendo Teams…", "hablando"). */
+#estado-line { font-size: 11px; color: var(--muted); padding: 7px 14px 0;
+  display: flex; align-items: center; gap: 7px; letter-spacing: .3px; }
+#estado-line::before { content: ''; width: 6px; height: 6px; flex: none;
+  border-radius: 50%; background: var(--muted);
+  transition: background .3s ease; }
+body.thinking #estado-line::before { background: var(--amber);
+  animation: dotpulse 1s ease-in-out infinite; }
+body.speaking #estado-line::before,
+body.armed #estado-line::before { background: var(--cyan);
+  animation: dotpulse 1s ease-in-out infinite; }
+body.chat #estado-line::before { background: var(--green); }
+body.muted #estado-line::before { background: var(--amber); }
+body.error #estado-line::before { background: #ff5c5c; }
+@keyframes dotpulse { 50% { opacity: .3; } }
 
 #log { flex: 1; overflow-y: auto; padding: 10px 14px;
   display: flex; flex-direction: column; gap: 8px; }
 #log::-webkit-scrollbar { width: 4px; }
 #log::-webkit-scrollbar-thumb { background: var(--line); }
-.msg { max-width: 88%; padding: 7px 11px; border-radius: 10px;
-  white-space: pre-wrap; user-select: text; }
-.yo { align-self: flex-end; background: #0d2f42;
-  border: 1px solid #14455f; border-bottom-right-radius: 3px; }
-.harvis { align-self: flex-start; background: var(--panel);
-  border: 1px solid var(--line); border-bottom-left-radius: 3px; }
+.msg { max-width: 88%; padding: 8px 12px; border-radius: 14px;
+  white-space: pre-wrap; user-select: text; font-size: 12.5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .35);
+  animation: msgIn .22s ease-out; }
+@keyframes msgIn { from { opacity: 0; transform: translateY(5px); } }
+.yo { align-self: flex-end; color: #e2f5ff;
+  background: linear-gradient(135deg, #10405c, #0b2b40);
+  border: 1px solid rgba(53, 214, 255, .28);
+  border-bottom-right-radius: 4px; }
+.harvis { align-self: flex-start; background: rgba(13, 26, 40, .92);
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-bottom-left-radius: 4px; }
 .harvis.aviso { border-color: #3d2f14; color: var(--amber); }
 
 #timers { padding: 6px 14px; border-top: 1px solid var(--line);
@@ -367,15 +433,16 @@ const ESTADOS = {
   idle: () => `esperando «${NOMBRE}…»`, armed: () => 'te escucho — seguí hablando',
   thinking: () => 'pensando…', speaking: () => 'hablando',
   chat: () => 'modo charla — decí «listo» para cortar',
-  muted: () => 'micrófono APAGADO — tocá 🎤 para prender',
+  muted: () => 'micrófono APAGADO — tocá el mic para prender',
+  error: () => 'uy, algo falló',
 };
 let ESTADO_ACTUAL = 'idle';
 let BRAIN_ACTUAL = '';
 const hud = {
   state(s) {
     const b = document.body;
-    ['idle', 'armed', 'thinking', 'speaking', 'chat', 'muted'].forEach(c =>
-      b.classList.remove(c));
+    ['idle', 'armed', 'thinking', 'speaking', 'chat', 'muted',
+     'error'].forEach(c => b.classList.remove(c));
     b.classList.add(s);
     ESTADO_ACTUAL = s;
     document.getElementById('estado-line').textContent =
@@ -390,6 +457,17 @@ const hud = {
         ESTADOS[ESTADO_ACTUAL]();
   },
   clear() { document.getElementById('log').innerHTML = ''; window._stream = null; },
+  error() {
+    // rojo tenue transitorio; vuelve solo al estado anterior
+    const prev = ESTADO_ACTUAL === 'error' ? 'idle' : ESTADO_ACTUAL;
+    hud.state('error');
+    setTimeout(() => { if (ESTADO_ACTUAL === 'error') hud.state(prev); },
+               1900);
+  },
+  actividad(t) {
+    // "Leyendo Teams…" / "Abriendo Spotify…" mientras usa una tool
+    document.getElementById('estado-line').textContent = t;
+  },
   replyChunk(t) {
     if (!window._stream) {
       const log = document.getElementById('log');
@@ -699,6 +777,12 @@ class Hud:
     def clear_chat(self):
         self._js("hud.clear()")
 
+    def error_flash(self):
+        self._js("hud.error()")
+
+    def actividad(self, t: str):
+        self._js(f"hud.actividad({json.dumps(t)})")
+
     def heard(self, t: str):
         self._js(f"hud.heard({json.dumps(t)})")
 
@@ -794,6 +878,7 @@ def serve_main_thread(timeout: float = 300):
     w, h = int(ORB[0] * esc), int(ORB[1] * esc)
     hud.window = webview.create_window(
         "HARVIS", html=HTML.replace("__AVATAR__", AVATAR_URI)
+                          .replace("__FONT__", FONT_URI)
                           .replace("__PROMOS__", _promos_json()),
         frameless=True, easy_drag=True,
         on_top=True, width=w, height=h,

@@ -134,7 +134,9 @@ class CerebroJarvis:
         if not tool:
             return f"No existe la herramienta '{name}'."
         import time as _time
+        from registry import _avisar_tool
         from trazas import ev
+        _avisar_tool(name)
         _t0 = _time.monotonic()
         try:
             args = json.loads(tc.function.arguments or "{}")
