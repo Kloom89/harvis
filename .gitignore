@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Datos personales del runtime — JAMÁS commitear
+kloom.log*
+turnos.jsonl
+historial.jsonl
+memoria.md
+comandos.yaml
+telegram_owner.json
+contactos_whatsapp.json
+dataset/
+screenshots/
+*.mp3
+*.wav

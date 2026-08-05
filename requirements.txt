@@ -1,0 +1,19 @@
+# HARVIS — Windows only (win32 APIs, WASAPI audio, UIA)
+claude-agent-sdk
+openai
+faster-whisper
+edge-tts
+pygame
+sounddevice
+numpy
+pynput
+pyperclip
+pywebview
+pywinauto
+pywin32
+PyYAML
+
+# GPU (opcional, recomendado): DLLs de CUDA para faster-whisper.
+# Sin esto cae solo a CPU con el modelo "medium".
+nvidia-cublas-cu12; sys_platform == "win32"
+nvidia-cudnn-cu12; sys_platform == "win32"

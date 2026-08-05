@@ -1,0 +1,211 @@
+# HARVIS — config
+# by KloomStudio.com.ar
+
+privacy:
+  # Loguear TODO lo que el micrófono transcribe, incluso sin wake word.
+  # Sirve para calibrar el wake word (wake_lab.py come de kloom.log), pero
+  # deja en texto plano cualquier charla de la habitación. Poné false
+  # cuando el reconocimiento ande bien.
+  log_all_speech: false
+  # Guardar el audio de los comandos con wake word (dataset/wake/*.wav,
+  # tope 500) — es el dataset para entrenar un modelo de wake word propio.
+  save_wake_audio: false
+
+wake:
+  # La frase se transcribe entera; si arranca con el wake word, el resto es
+  # el comando. Match por substring en los primeros caracteres.
+  word: harvis
+  # Whisper casi nunca escribe bien un nombre inventado: escribe javi,
+  # harvey, harris, charvis, sharbis, chervis. El regex cubre el esqueleto
+  # <ataque /j/ o /ʃ/><vocal><r opcional><labial opcional><i|e><y|s opcional>.
+  # Calibrado con wake_lab.py contra logs reales. Si cambiás el wake word
+  # (botón SKILLS del HUD), el pattern se desactiva solo y queda el fuzzy.
+  pattern: '\b(?!ser)(?:[jhgyx]|ch|sh|ll)[aeo](?:r{1,2}|l)?[vbpfwl]?(?:i[sz]{0,2}|ey|ier)\b'
+  # Cuántos caracteres iniciales del transcript se miran para el wake word.
+  prefix_chars: 18
+  # Si el regex no matchea, similitud fuzzy contra el wake word. El umbral
+  # es adaptativo: llamarlo es una frase corta, lo parecido en charla ajena
+  # viene en frases largas. Recalibrar con wake_lab.py --barrido.
+  fuzzy_corto: 0.55
+  fuzzy_largo: 0.58
+  fuzzy_max_palabras: 3
+  # Variantes exactas que el fuzzy no alcanza: Whisper inventa una nueva →
+  # se agrega acá, sin tocar código.
+  aliases: [harry, jarbis, harbis]
+  # Conversación seguida: segundos post-respuesta en los que se puede
+  # repreguntar sin wake word. 0 = apagado.
+  followup: 20
+  # Modo charla ("harvis, modo charla"): TODO lo que se oiga va al cerebro.
+  # Se corta diciendo "listo"/"basta"/"chau" o solo, tras estos segundos de
+  # silencio.
+  chat_timeout: 180
+
+ptt:
+  # Push-to-talk: mantener apretada → dicta a la ventana activa.
+  key: f8
+  # "Cortala": aborta el turno y calla la voz (también el botón ⏹ del HUD).
+  abort_key: f9
+  # Enter automático después de pegar (para mandar directo en un chat).
+  press_enter: true
+
+stt:
+  model: large-v3
+  language: es
+  # cuda | cpu — si cuda falla al cargar, cae solo a cpu con "medium".
+  device: cuda
+  # Con música/ruido Whisper alucina frases de su corpus de YouTube
+  # ("Gracias", "Suscríbete al canal"). Se descartan por confianza baja.
+  no_speech_max: 0.6
+  logprob_min: -1.0
+  # Sesga la transcripción hacia estas palabras.
+  hotwords: "Harvis, privacidad, cerebro, Groq, Claude, Ollama, Gemini, Kimi"
+  # Correcciones post-transcripción, antes del parser de comandos.
+  # Cada entrada: pattern (regex, (?i) para ignorar mayúsculas) y replace.
+  text_corrections:
+    - pattern: '(?i)\bharviss+\b'
+      replace: Harvis
+    # variantes que Whisper usa para el nombre — cosmético, el wake ya las
+    # acepta igual. OJO no mapear nombres reales que puedas dictar en
+    # mensajes (javier queda afuera a propósito).
+    - pattern: '(?i)\b(harvey|harveys|harry|jarvis|harvis|jervis|hergis|charvis|sharvis|chervis|harbis|jarbis|harvich|jarvish|harvish|harvest)\b'
+      replace: Harvis
+
+briefing:
+  hora: "09:00"   # buen día con clima + pendientes + Teams (skill briefing_matinal)
+
+vad:
+  # Silencio que cierra una frase, en segundos. Más bajo = responde antes;
+  # muy bajo te corta a mitad de frase si pausás al hablar.
+  silence_end: 0.9
+  # En modo charla/coach: más respiro para pensar sin que te corte.
+  silence_end_chat: 1.6
+  # Máximo de una frase (en modo coach los descargos son largos).
+  max_utterance: 90
+
+tts:
+  enabled: true
+  # Cualquier voz de edge-tts: `edge-tts --list-voices`.
+  voice: es-AR-TomasNeural
+
+llm:
+  # Cerebro activo (clave dentro de providers). Por voz: "harvis, cambiá
+  # el cerebro a groq".
+  brain: claude
+  # El modo coach usa su propio cerebro, sin tools (Llama 70B conversa bien).
+  coach_brain: groq
+  # Tope en segundos para responder un comando, cualquier driver. Si se
+  # cuelga, lo dice por voz y el mic vuelve a escuchar.
+  turn_timeout: 180
+  # API keys NUNCA acá: cada proveedor declara api_key_env y la key vive
+  # en una variable de entorno.
+  providers:
+    claude:
+      driver: sdk               # claude-agent-sdk (suscripción o API)
+      # haiku responde 3-4x más rápido que sonnet y para comandos de voz
+      # sobra; si extrañás la ironía fina subí a sonnet.
+      model: haiku
+    ollama:
+      driver: openai
+      base_url: http://localhost:11434/v1
+      model: qwen3:4b           # cualquier modelo local con tools
+    groq:
+      driver: openai
+      base_url: https://api.groq.com/openai/v1
+      model: llama-3.3-70b-versatile
+      api_key_env: GROQ_API_KEY
+    kimi:
+      driver: openai
+      base_url: https://api.moonshot.ai/v1
+      model: kimi-k2-0711-preview
+      api_key_env: MOONSHOT_API_KEY
+    openai:
+      driver: openai
+      base_url: https://api.openai.com/v1
+      model: gpt-4o-mini
+      api_key_env: OPENAI_API_KEY
+    gemini:
+      driver: openai
+      base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+      model: gemini-2.5-flash
+      api_key_env: GEMINI_API_KEY
+  system_prompt: |
+    Sos HARVIS, el asistente por voz de esta PC (Windows 11).
+    Todo lo que te llega fue dictado y transcripto por Whisper: esperá
+    palabras mal transcriptas y puntuación rara; interpretá con buena fe.
+    Tu respuesta se lee en voz alta con TTS: español, frases cortas, sin
+    markdown, sin listas, sin símbolos. Números y unidades como se dicen
+    hablando.
+    Tratá al usuario de "señor", con ironía seca estilo JARVIS de Iron Man.
+    Cuando te piden hacer algo en la PC, usá las herramientas de verdad y
+    confirmá en una línea. Si algo falla, decilo tal cual.
+    Nunca leas URLs ni rutas de archivo en voz alta.
+    Aprendé de las interacciones: cuando el usuario te corrija, te revele
+    una preferencia o un dato para el futuro, guardalo con remember en el
+    momento (sin pedir permiso). Si un hecho guardado resulta viejo o
+    falso, corregilo con forget + remember.
+    WhatsApp SIEMPRE en dos pasos: whatsapp_draft busca el contacto POR
+    NOMBRE y deja el mensaje escrito sin enviar; whatsapp_confirm SOLO si
+    el usuario dice explícitamente "mandalo" después de ver el borrador.
+    Jamás confirmes por tu cuenta ni encadenes draft+confirm en un turno.
+    REGLA DE ORO: NUNCA anuncies lo que "vas a hacer" — hacelo YA, en este
+    mismo turno, con las tools. Si tu respuesta dice "voy a abrirlo" y no
+    lo abriste, fallaste. Terminá cada turno con el resultado, no con la
+    intención.
+    Tus respuestas se LEEN EN VOZ ALTA: texto plano, jamás markdown — nada
+    de asteriscos, negritas, viñetas, numeraciones ni títulos. Enumerá
+    hablando ("primero..., segundo...") como lo haría una persona.
+    Y CORTAS: 1-3 oraciones alcanzan casi siempre; extendete solo si el
+    usuario pide detalle explícito. Escucharte 20 renglones es un martirio.
+    "¿Quién me habló?" / "¿qué hay en Teams?" → teams_unread (lista) y
+    teams_read_chat(nombre) (mensajes de un chat) — son texto directo,
+    NO uses capturas de pantalla para Teams.
+    Tenés ojos: take_screenshot captura la pantalla y con Read la VES.
+    Usalo cuando pregunten "qué ves", para leer errores en pantalla, o
+    para VERIFICAR que una acción salió bien antes de confirmarla.
+    Si hay un vault de notas configurado, buscá ahí con cerebro_search
+    antes de decir "no sé" sobre la vida o el trabajo del usuario, y
+    mantené "Perfil-Usuario.md" (cerebro_note) con lo que vas aprendiendo
+    de él — actualizalo solo cada vez que aprendas algo sustancial.
+
+reflexion:
+  # Reflexión nocturna: HARVIS relee el historial del día y actualiza su
+  # memoria (remember/forget) y el perfil del usuario. Se saltea los días
+  # sin actividad. El resumen llega por Telegram si está activo.
+  enabled: true
+  hora: "04:30"
+
+telegram:
+  # Canal remoto: hablarle a HARVIS desde el celu. El token vive en la
+  # variable de entorno (crear bot con @BotFather). El PRIMER chat que le
+  # escriba queda como dueño único (telegram_owner.json); borrar ese
+  # archivo para re-emparejar.
+  token_env: TELEGRAM_BOT_TOKEN
+
+hud:
+  # Orbe flotante siempre-encima; click = panel con historial, timers,
+  # selector de cerebro y entrada de texto.
+  enabled: true
+
+tools:
+  claude_code:
+    # Substring del título de la ventana donde pegar cuando dicen
+    # "decile a claude ...".
+    window_title: Claude
+  browser:
+    # Puerto CDP de un Chrome con --remote-debugging-port. Si no responde,
+    # se abre con el navegador default.
+    cdp_port: 9222
+  homelab:
+    # SSH de solo-lectura a tu servidor/homelab (con clave, sin password).
+    # Vacío = tools de homelab y vault desactivadas.
+    host: ""              # ej: usuario@192.168.1.50
+    vault: ""             # ej: /home/usuario/MiVault (notas Obsidian/md)
+    disk_path: "/"        # disco que vigila la skill vigia_homelab
+  proyectos:
+    # Carpeta con archivos project_*.md (memoria de proyectos, p.ej. la de
+    # Claude Code). Vacío = tool desactivada.
+    memory_dir: ""
+  codigo:
+    # Carpeta raíz de tus proyectos de código, indexada con CodeGraph CLI.
+    # Vacío = tools de código desactivadas.
+    projects_dir: ""
