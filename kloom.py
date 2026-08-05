@@ -1359,22 +1359,18 @@ async def main():
             print("♪ modo música ON", flush=True)
             continue   # sin ventana de followup
         oido.unmute()
-        # Conversación seguida estilo Alexa: unos segundos para repreguntar
-        # sin repetir el wake word. El beep avisa que la ventana está abierta.
-        # En modo charla no hace falta: ya escucha todo.
+        # Terminado el turno vuelve a esperar su nombre. Antes quedaba una
+        # ventana abierta para repreguntar sin nombrarlo, pero con alguien
+        # hablando cerca (o grabando un video) contestaba cualquier cosa:
+        # sin wake word solo escuchan los modos que el usuario enciende a
+        # propósito — charla, coach, redactor, música.
         if chat_mode:
             chat_last = time.monotonic()
             hud.set_state("chat")
         elif music_mode:
-            # seguimos en modo música: nada de ventana de repregunta ni
-            # "te escucho" — el modo ya escucha órdenes de música siempre.
             hud.set_state("idle")   # sin esto el anillo "pensando" queda
             hud.actividad("♪ modo música — pausa, siguiente, poné tal "
                           "tema… «modo normal» para salir")
-        elif followup > 0:
-            beep_listening()
-            hud.set_state("armed")
-            awaiting_command_until = time.monotonic() + followup
         else:
             hud.set_state("idle")
 

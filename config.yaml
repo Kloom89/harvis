@@ -32,8 +32,9 @@ wake:
   # Variantes exactas que el fuzzy no alcanza: Whisper inventa una nueva →
   # se agrega acá, sin tocar código.
   aliases: [harry, jarbis, harbis]
-  # Conversación seguida: segundos post-respuesta en los que se puede
-  # repreguntar sin wake word. 0 = apagado.
+  # Segundos que espera tu orden después de contestar "¿Señor?" (decís solo
+  # el nombre y el comando va después). NO se abre al terminar un turno:
+  # fuera de los modos, siempre hay que nombrarlo.
   followup: 20
   # Modo charla ("harvis, modo charla"): TODO lo que se oiga va al cerebro.
   # Se corta diciendo "listo"/"basta"/"chau" o solo, tras estos segundos de
