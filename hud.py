@@ -253,7 +253,7 @@ body.skills #entrada { display: none !important; }
 #brain-sel option { background: #0a1d2e; color: var(--text); }
 
 #entrada { display: flex; gap: 8px; padding: 10px 14px 14px; }
-#entrada input { flex: 1; background: var(--panel);
+#entrada input { flex: 1; min-width: 0; background: var(--panel);
   border: 1px solid var(--line); border-radius: 10px; color: var(--text);
   padding: 9px 12px; font-size: 13px; outline: none; }
 #entrada input:focus { border-color: var(--cyan-dim); }
