@@ -232,12 +232,16 @@ body.skills #entrada { display: none !important; }
 #timers .t { font-size: 12px; color: var(--amber); padding: 2px 0; }
 #timers .t::before { content: '◔ '; }
 
-#brains { display: flex; gap: 6px; padding: 8px 14px 0; flex-wrap: wrap; }
-#brains button { background: none; border: 1px solid var(--line);
-  color: var(--muted); border-radius: 20px; padding: 4px 12px;
-  font-size: 11px; cursor: pointer; letter-spacing: .5px; }
-#brains button:hover { border-color: var(--cyan-dim); color: var(--text); }
-#brains button.on { border-color: var(--cyan); color: var(--cyan); }
+#brains { display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px 0; }
+#brains-label { font-size: 10px; letter-spacing: 2px; color: var(--muted);
+  text-transform: uppercase; }
+#brain-sel { flex: none; background: var(--panel); color: var(--cyan);
+  border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px;
+  font-size: 11px; letter-spacing: .5px; cursor: pointer; outline: none;
+  text-transform: capitalize; }
+#brain-sel:hover { border-color: var(--cyan-dim); }
+#brain-sel option { background: #0a1d2e; color: var(--text); }
 
 #entrada { display: flex; gap: 8px; padding: 10px 14px 14px; }
 #entrada input { flex: 1; background: var(--panel);
@@ -330,14 +334,19 @@ const hud = {
   aviso(t) { addMsg('harvis aviso', t); },
   brain(b) {
     document.getElementById('brain').textContent = b;
-    document.querySelectorAll('#brains button').forEach(x =>
-      x.classList.toggle('on', x.textContent === b));
+    const s = document.getElementById('brain-sel');
+    if (s) s.value = b;
   },
   brains(list) {
-    const c = document.getElementById('brains'); c.innerHTML = '';
-    list.forEach(b => { const el = document.createElement('button');
-      el.textContent = b; el.onclick = () => pywebview.api.switch_brain(b);
-      c.appendChild(el); });
+    const c = document.getElementById('brains');
+    c.innerHTML = '<span id="brains-label">Brain:</span>';
+    const s = document.createElement('select');
+    s.id = 'brain-sel';
+    list.forEach(b => { const o = document.createElement('option');
+      o.value = b; o.textContent = b; s.appendChild(o); });
+    s.onchange = () => pywebview.api.switch_brain(s.value);
+    c.appendChild(s);
+    s.value = document.getElementById('brain').textContent || list[0];
   },
   expanded(on) { document.body.classList.toggle('expanded', on); },
   timers(list) {
