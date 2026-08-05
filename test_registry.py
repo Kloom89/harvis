@@ -8,7 +8,7 @@ from tools import browser, claude_code, codigo, homelab, media, memoria, proyect
 ALL = (windows.TOOLS + claude_code.TOOLS + browser.TOOLS + media.TOOLS
        + timers.TOOLS + proyectos.TOOLS + memoria.TOOLS + homelab.TOOLS + codigo.TOOLS + whatsapp.TOOLS + vision.TOOLS + teams.TOOLS)
 
-assert len(ALL) == 40, f"esperaba 40 tools, hay {len(ALL)}"
+assert len(ALL) == 41, f"esperaba 41 tools, hay {len(ALL)}"
 assert all(isinstance(t, Tool) for t in ALL)
 
 for t in ALL:
