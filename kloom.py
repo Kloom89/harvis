@@ -955,6 +955,11 @@ async def main():
             command = text
         else:
             command = match_wake(text, cfg)
+            if command and len(command.split()) <= 4 and all(
+                    match_wake(t, cfg) is not None for t in command.split()):
+                # "Harvis Harvis Harvis" (o Javier×3, dictado sucio): no es
+                # un comando, es la LLAMADA repetida → "¿Señor?" + ducking.
+                command = ""
             if command is None:
                 # Frase de MODO corta sin wake word ("activá el modo
                 # coach"): casi seguro es para HARVIS — mismo criterio que
