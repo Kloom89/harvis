@@ -17,6 +17,17 @@ MEDIA = {
 }
 
 
+def combo(*teclas: str) -> None:
+    """Combinación de teclas: combo('ctrl', 'w'). Los modificadores van
+    primero; la última es la tecla normal."""
+    mods = [getattr(Key, t) for t in teclas[:-1]]
+    for m in mods:
+        _kb.press(m)
+    _kb.tap(teclas[-1])
+    for m in reversed(mods):
+        _kb.release(m)
+
+
 def paste(text: str, press_enter: bool) -> None:
     prev = pyperclip.paste()
     pyperclip.copy(text)

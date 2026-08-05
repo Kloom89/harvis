@@ -63,7 +63,16 @@ def _find_window(title: str) -> int | None:
 def focus_hwnd(hwnd: int):
     if win32gui.IsIconic(hwnd):
         win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
-    win32gui.SetForegroundWindow(hwnd)
+    try:
+        win32gui.SetForegroundWindow(hwnd)
+    except Exception:
+        # Windows bloquea robar el foco desde un proceso de fondo (error
+        # 258): el truco estándar es un toque de ALT antes de reintentar.
+        from pynput.keyboard import Controller, Key
+        kb = Controller()
+        kb.press(Key.alt)
+        kb.release(Key.alt)
+        win32gui.SetForegroundWindow(hwnd)
 
 
 @kloom_tool("open_app", "Abre una aplicación instalada, por nombre (ej: 'calculadora', 'spotify', 'notepad').", {"name": str})
@@ -83,13 +92,44 @@ async def open_app(args):
         return f"No encontré ninguna app que se llame '{name}'."
 
 
-@kloom_tool("close_window", "Cierra la ventana cuyo título contiene el texto dado (como clickear la X).", {"title": str})
+@kloom_tool("close_window", "Cierra la ventana ENTERA (la app completa) cuyo título contiene el texto dado. Para cerrar UNA pestaña o página del navegador usá close_tab, NO esto.", {"title": str})
 async def close_window(args):
+    import asyncio
     hwnd = _find_window(args["title"])
     if not hwnd:
         return f"No hay ninguna ventana con '{args['title']}' en el título."
     win32gui.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)
-    return "Cerrada."
+    # VERIFICAR el efecto (lección Automaton): el navegador puede mostrar
+    # un diálogo de confirmación y la ventana sigue viva — no mentir.
+    await asyncio.sleep(1.2)
+    if win32gui.IsWindow(hwnd) and win32gui.IsWindowVisible(hwnd):
+        return ("La ventana SIGUE abierta: la app pidió confirmación para "
+                "cerrar (p.ej. el navegador con varias pestañas). Avisale "
+                "al usuario que confirme él, o usá close_tab si solo había "
+                "que cerrar una pestaña.")
+    return "Cerrada, verificado."
+
+
+@kloom_tool("close_tab", "Cierra la PESTAÑA activa del navegador (u otra app con pestañas) cuyo título contiene el texto dado: trae la ventana al frente y manda Ctrl+W. Para cerrar 'la página de noticias' o 'esa pestaña', usá esto y no close_window.", {"title": str})
+async def close_tab(args):
+    import asyncio
+    hwnd = _find_window(args["title"])
+    if not hwnd:
+        return f"No hay ninguna ventana con '{args['title']}' en el título."
+    titulo_antes = win32gui.GetWindowText(hwnd)
+    focus_hwnd(hwnd)
+    await asyncio.sleep(0.3)
+    from teclado import combo
+    combo("ctrl", "w")
+    await asyncio.sleep(0.8)
+    # verificación honesta: el título cambia al cerrar la pestaña activa
+    if win32gui.IsWindow(hwnd):
+        titulo_ahora = win32gui.GetWindowText(hwnd)
+        if titulo_ahora == titulo_antes:
+            return ("Mandé cerrar la pestaña pero el título no cambió — "
+                    "puede que no se haya cerrado. Decíselo al usuario.")
+        return f"Pestaña cerrada; ahora se ve: {titulo_ahora[:60]}"
+    return "Pestaña cerrada (era la última: se cerró la ventana)."
 
 
 @kloom_tool("focus_window", "Trae al frente la ventana cuyo título contiene el texto dado.", {"title": str})
@@ -133,5 +173,5 @@ async def list_windows(args):
     return "\n".join(titles) or "No hay ventanas visibles."
 
 
-TOOLS = [open_app, close_window, focus_window, minimize_window,
+TOOLS = [open_app, close_window, close_tab, focus_window, minimize_window,
          maximize_window, list_windows]
