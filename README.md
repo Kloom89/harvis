@@ -24,6 +24,12 @@
 
 ---
 
+<p align="center">
+  <img src="assets/demo.gif" width="760" alt="Asking HARVIS out loud to play a playlist — it opens YouTube Music and starts it">
+</p>
+
+<p align="center"><sub>Real capture, no cuts: the command is spoken, HARVIS opens the player and checks the audio meter before saying it's playing.</sub></p>
+
 Most AI assistants stop at conversation. **HARVIS keeps going.**
 
 Say its name and it wakes up **on your machine** — no cloud microphone, no

@@ -25,6 +25,12 @@
 
 ---
 
+<p align="center">
+  <img src="assets/demo.gif" width="760" alt="Le pido en voz alta que ponga una playlist: abre YouTube Music y la arranca">
+</p>
+
+<p align="center"><sub>Captura real, sin cortes: la orden se dice hablando, HARVIS abre el reproductor y mira el medidor de audio antes de decir que suena.</sub></p>
+
 La mayoría de los asistentes de IA se quedan en la charla. **HARVIS sigue de largo.**
 
 Decís su nombre y se despierta **en tu máquina** — sin micrófono en la nube, sin
