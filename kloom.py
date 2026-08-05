@@ -318,6 +318,24 @@ def match_wake(text: str, cfg: dict) -> str | None:
                 break
     if m and m.start() < prefix_chars:
         return text[m.end():].lstrip(" ,.!?¡¿:;").strip()
+
+    # Hablando de corrido el VAD no corta nunca, así que la orden llega
+    # pegada al final de un párrafo: "...la pueden cerrar por ejemplo
+    # Harvis modo coach". Vale el nombre en cualquier posición, pero solo
+    # si Whisper lo escribió TAL CUAL (nada de fuzzy acá: en una frase
+    # larga cualquier palabra se le parece un poco) y lo que sigue tiene
+    # tamaño de orden y no de párrafo.
+    maximo = int(wcfg.get("orden_max_palabras", 15))
+    marcas = list(re.finditer(pattern, norm))
+    aliases = set(wcfg.get("aliases") or [])
+    if aliases:
+        marcas += [c for c in re.finditer(r"[a-z]{3,9}", norm)
+                   if c.group() in aliases]
+    if marcas:
+        orden = text[max(marcas, key=lambda x: x.end()).end():]
+        orden = orden.lstrip(" ,.!?¡¿:;").strip()
+        if orden and len(orden.split()) <= maximo:
+            return orden
     # Vocativo al final, como con una persona: "...mirá Teams, Harvis?".
     # Solo regex (sin fuzzy) sobre la cola: posición más propensa a ruido.
     cola = int(wcfg.get("suffix_chars", 16))
@@ -325,7 +343,11 @@ def match_wake(text: str, cfg: dict) -> str | None:
         m2 = re.search(pattern, norm[-cola:])
         if m2:
             corte = len(norm) - cola + m2.start()
-            return text[:corte].rstrip(" ,.!?¡¿:;").strip()
+            previo = text[:corte].rstrip(" ,.!?¡¿:;").strip()
+            # "…mirá Teams, Harvis" sí; una presentación entera que termina
+            # nombrándolo, no.
+            if previo and len(previo.split()) <= maximo:
+                return previo
     return None
 
 
