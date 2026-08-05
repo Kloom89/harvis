@@ -17,6 +17,45 @@ try:
 except Exception:
     AVATAR_URI = ""
 
+# --- Banner de apps de KloomStudio: la propaganda de la casa. Logos chicos
+# embebidos en base64 (assets/promos/), rota cada 15 s, clic abre la web.
+_PROMOS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "assets", "promos")
+_PROMOS_DATA = [
+    ("tv-optimizer", "TV Optimizer PRO",
+     "Build, test & optimize your TradingView strategy",
+     "START FREE", "https://app.optimizertrading.workers.dev"),
+    ("tucora", "TuCora", "Clarity for your relationships",
+     "GET APP", "https://tucora.com.ar"),
+    ("senda-tarot", "Senda Tarot", "Tarot that talks straight",
+     "SEE MORE", "https://kloomstudio.com.ar/en/apps/senda-tarot"),
+    ("gula", "Gula", "Count calories with one photo",
+     "SEE MORE", "https://kloomstudio.com.ar/en/apps/gula"),
+    ("instaunfollowers", "InstaUnfollowers",
+     "See who doesn't follow you back",
+     "INSTALL", "https://play.google.com/store/apps/details?id=com.matias.instaunfollowers"),
+    ("ganancia-real", "Ganancia Real",
+     "Prices with real profit for your Tiendanube store",
+     "INSTALL", "https://www.tiendanube.com/tienda-aplicaciones-nube/ganancia-real"),
+    ("digitala", "Digitala", "Digital delivery for your Tiendanube store",
+     "SEE MORE", "https://kloomstudio.com.ar/en/apps/digitala"),
+]
+
+
+def _promos_json() -> str:
+    out = []
+    for slug, nombre, tag, cta, url in _PROMOS_DATA:
+        logo = ""
+        try:
+            ruta = os.path.join(_PROMOS_DIR, f"{slug}.png")
+            logo = ("data:image/png;base64,"
+                    + base64.b64encode(open(ruta, "rb").read()).decode())
+        except Exception:
+            pass
+        out.append({"logo": logo, "name": nombre, "tag": tag,
+                    "cta": cta, "url": url})
+    return json.dumps(out)
+
 ORB = (96, 96)
 PANEL = (380, 600)
 MARGIN = 16
@@ -71,11 +110,23 @@ html, body { background: var(--bg); height: 100%; overflow: hidden;
 .muted #orb::before { border-color: #57320f; }
 body.expanded.muted #mini-orb {
   filter: grayscale(1) brightness(.55); box-shadow: none; }
-#promo { font-size: 10.5px; color: var(--muted); padding: 6px 14px 2px;
-  cursor: pointer; white-space: nowrap; overflow: hidden;
-  text-overflow: ellipsis; }
-#promo:hover { color: var(--cyan); text-decoration: underline; }
-#promo::before { content: '✦ '; color: var(--cyan); }
+#promo { display: flex; align-items: center; gap: 9px; cursor: pointer;
+  margin: 6px 12px 0; padding: 6px 10px; border: 1px solid var(--line);
+  border-radius: 11px; overflow: hidden;
+  background: linear-gradient(90deg, #06121d, #081a29 60%, #06121d); }
+#promo:hover { border-color: var(--cyan-dim);
+  box-shadow: 0 0 12px rgba(53, 214, 255, .18); }
+#promo-logo { width: 26px; height: 26px; border-radius: 7px; flex: none; }
+#promo-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+#promo-name { font-size: 11px; color: #eaf6ff; letter-spacing: .3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#promo-tag { font-size: 10px; color: var(--muted); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+#promo-cta { flex: none; font-size: 9px; font-weight: 700;
+  letter-spacing: 1.2px; color: var(--cyan); padding: 4px 11px;
+  border: 1px solid var(--cyan-dim); border-radius: 999px;
+  text-shadow: 0 0 8px rgba(53, 214, 255, .5); }
+#promo:hover #promo-cta { background: rgba(53, 214, 255, .12); }
 #mic-btn, #new-btn, #stop-btn { background: none;
   border: 1px solid var(--line); border-radius: 10px; cursor: pointer;
   padding: 0 12px; font-size: 15px; }
@@ -205,7 +256,14 @@ body.skills #entrada { display: none !important; }
   <div id="timers"></div>
   <div id="brains"></div>
   <div id="promo" title="Apps de KloomStudio"
-       onclick="pywebview.api.abrir_url(this.dataset.url)"></div>
+       onclick="pywebview.api.abrir_url(this.dataset.url)">
+    <img id="promo-logo" alt="">
+    <div id="promo-txt">
+      <b id="promo-name"></b>
+      <span id="promo-tag"></span>
+    </div>
+    <span id="promo-cta"></span>
+  </div>
   <div id="entrada">
     <button id="mic-btn" title="Micrófono on/off"
             onclick="pywebview.api.toggle_mic()">🎤</button>
@@ -294,29 +352,17 @@ function enviar() {
   pywebview.api.send_text(i.value.trim()); i.value = '';
 }
 // Apps de KloomStudio — la propaganda de la casa. Rota cada 15 s.
-const PROMOS = [
-  ['TV Optimizer PRO — optimizá tus estrategias de TradingView',
-   'https://app.optimizertrading.workers.dev'],
-  ['TuCora — claridad para tus vínculos',
-   'https://tucora.com.ar'],
-  ['Senda Tarot — el tarot que te habla claro',
-   'https://kloomstudio.com.ar/apps/senda-tarot'],
-  ['Gula — calorías con una foto',
-   'https://kloomstudio.com.ar/apps/gula'],
-  ['InstaUnfollowers — quién no te sigue de vuelta',
-   'https://play.google.com/store/apps/details?id=com.matias.instaunfollowers'],
-  ['Ganancia Real — precios que sí dejan ganancia (Tiendanube)',
-   'https://www.tiendanube.com/tienda-aplicaciones-nube/ganancia-real'],
-  ['Digitala — entregas digitales para tu Tiendanube',
-   'https://kloomstudio.com.ar/apps/digitala'],
-];
+const PROMOS = __PROMOS__;
 let PROMO_I = Math.floor(Math.random() * PROMOS.length);
 function rotarPromo() {
   const el = document.getElementById('promo');
-  if (!el) return;
+  if (!el || !PROMOS.length) return;
   const p = PROMOS[PROMO_I++ % PROMOS.length];
-  el.textContent = p[0];
-  el.dataset.url = p[1];
+  document.getElementById('promo-logo').src = p.logo;
+  document.getElementById('promo-name').textContent = p.name;
+  document.getElementById('promo-tag').textContent = p.tag;
+  document.getElementById('promo-cta').textContent = p.cta;
+  el.dataset.url = p.url;
 }
 setInterval(rotarPromo, 15000);
 rotarPromo();
@@ -617,7 +663,8 @@ def serve_main_thread(timeout: float = 60):
         return
     scr = webview.screens[0]
     hud.window = webview.create_window(
-        "HARVIS", html=HTML.replace("__AVATAR__", AVATAR_URI),
+        "HARVIS", html=HTML.replace("__AVATAR__", AVATAR_URI)
+                          .replace("__PROMOS__", _promos_json()),
         frameless=True, easy_drag=True,
         on_top=True, width=ORB[0], height=ORB[1],
         x=scr.width - ORB[0] - MARGIN, y=scr.height - ORB[1] - 56,
