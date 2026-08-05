@@ -46,3 +46,15 @@ if espurios:
 print(f"positivos {len(POSITIVOS)}  negativos {len(NEGATIVOS)}  fallas {mal}")
 assert mal == 0
 print("test_wake OK ✓")
+
+# Un video de fondo que arranca con una palabra parecida ("Mari" mide 0.60
+# contra "harvis") NO puede despertarlo: el parecido solo vale si la huella
+# de voz confirma que habló él (el gate vive en el loop de kloom.py).
+PARECIDOS = [
+    "Mari, Mari, Mari, sentiste el terremoto ¿el terremoto no? y esta billeta",
+    "hoy es mi cumple y la pasé bárbaro con toda la gente que quiero",
+]
+for frase in PARECIDOS:
+    if match_wake(frase, cfg, fuzzy=False) is not None:
+        print(f"  FALLA parecido {frase[:40]!r}: despierta sin huella")
+        mal += 1

@@ -275,7 +275,7 @@ def cargar_skills(cfg: dict):
     return tools, info, redactor_buffer, watchers
 
 
-def match_wake(text: str, cfg: dict) -> str | None:
+def match_wake(text: str, cfg: dict, fuzzy: bool = True) -> str | None:
     """Si la frase arranca con el wake word devuelve el comando (sin él);
     si no, None. '' = wake word solo, sin comando.
 
@@ -300,7 +300,7 @@ def match_wake(text: str, cfg: dict) -> str | None:
             if cand.group() in aliases:
                 m = cand
                 break
-    if not m:
+    if not m and fuzzy:
         corto = len(text.split()) <= int(wcfg.get("fuzzy_max_palabras", 3))
         umbral = float(wcfg.get("fuzzy_corto" if corto else "fuzzy_largo",
                                 0.50 if corto else 0.58))
@@ -1037,6 +1037,17 @@ async def main():
             command = text
         else:
             command = match_wake(text, cfg)
+            if command is not None and match_wake(text, cfg,
+                                                  fuzzy=False) is None:
+                # Matcheó por PARECIDO, no por el nombre: un tiktok que
+                # arranca con "Mari" mide 0.60 contra "harvis" y lo
+                # despertaba. Que lo confirme la voz o no vale.
+                if not (huella is not None and audio.size <= 16000 * 6
+                        and huella.match(audio,
+                                         margen=3.5 if music_mode else 0.0)):
+                    log.info("wake por parecido ignorado (no es su voz): %r",
+                             text[:60])
+                    continue
             if command and len(command.split()) <= 4 and all(
                     match_wake(t, cfg) is not None for t in command.split()):
                 # "Harvis Harvis Harvis" (o Javier×3, dictado sucio): no es
