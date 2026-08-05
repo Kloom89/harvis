@@ -91,6 +91,30 @@ DEFAULT_COMANDOS = {
               "salí del modo", "cortá la charla"],
 }
 
+# Modo música: el mic queda vivo pero SOLO pasan órdenes de música — la
+# letra de la canción no matchea nada y se ignora. Directas = tecla
+# multimedia al toque, sin gastar cerebro.
+# OJO con las letras de canciones: "para siempre", "otra vez", "play" son
+# palabras de canción — las ambiguas van ANCLADAS (frase entera o con
+# contexto de música); las inequívocas ("pausa", "siguiente") van sueltas.
+MUSICA_DIRECTAS = [
+    (re.compile(r"\bpausa\w*\b|\bdeten\w*\b|\bfrena\w*\b"
+                r"|^para(la)?( la (musica|cancion))?$"), "pause"),
+    (re.compile(r"^(dale )?play$|\breanuda\w*\b|^segui$"
+                r"|\bcontinua la (musica|cancion)\b"), "play"),
+    (re.compile(r"\bsiguiente\b|\bsaltea\w*\b|\bproxima\b"
+                r"|^(pasala|salta(la)?|otra)( cancion| tema)?$"), "next"),
+    (re.compile(r"\banterior\b|\bprevia\b|^volve una$"), "previous"),
+    (re.compile(r"sub\w+ (el )?volumen|volumen (mas )?arriba"
+                r"|^mas fuerte$"), "volume_up"),
+    (re.compile(r"baj\w+ (el )?volumen|volumen (mas )?abajo"
+                r"|^mas bajo$"), "volume_down"),
+]
+# Estas van al cerebro (necesitan tools): "poné tal tema", "cambiá de
+# playlist". Ancladas al inicio: "se pone triste"/"todo cambia" son letra.
+MUSICA_CEREBRO_RE = re.compile(
+    r"^(pone|poneme|cambia|cambiame|reproduci)\b|\bplaylist\b|\blista de\b")
+
 ENTER_CHAT_RE = EXIT_CHAT_RE = PRIVACY_RE = None
 ENTER_REDACTOR_RE = EXIT_REDACTOR_RE = ENTER_COACH_RE = RESET_RE = None
 
@@ -301,14 +325,6 @@ async def main():
                                 .get("window_title", "Claude"))
     browser.CDP_PORT = (cfg.get("tools", {}).get("browser", {})
                         .get("cdp_port", 9222))
-    hcfg = cfg.get("tools", {}).get("homelab", {}) or {}
-    homelab.HOST = str(hcfg.get("host", "") or "")
-    homelab.VAULT = str(hcfg.get("vault", "") or "").rstrip("/")
-    homelab.HARVIS_DIR = f"{homelab.VAULT}/HARVIS" if homelab.VAULT else ""
-    proyectos.MEMORY_DIR = os.path.expanduser(str(
-        cfg.get("tools", {}).get("proyectos", {}).get("memory_dir", "") or ""))
-    codigo.PROYECTOS = str(cfg.get("tools", {}).get("codigo", {})
-                           .get("projects_dir", "") or "")
     base_tools = (windows.TOOLS + claude_code.TOOLS + browser.TOOLS
                   + media.TOOLS + timers.TOOLS + proyectos.TOOLS
                   + memoria.TOOLS + homelab.TOOLS + codigo.TOOLS
@@ -418,10 +434,10 @@ async def main():
     import registry as _registry
     _registry.ON_TOOL = _mostrar_actividad
 
-    # Música sonando → privacidad AUTOMÁTICA al cerrar el turno: si no, el
-    # mic transcribe la letra y HARVIS le contesta a la canción.
-    pedido_privacidad = {"on": False}
-    browser.ON_MUSICA = lambda: pedido_privacidad.__setitem__("on", True)
+    # Música sonando → MODO MÚSICA al cerrar el turno: el mic sigue vivo
+    # pero solo acepta órdenes de música; la letra de la canción se ignora.
+    pedido_musica = {"on": False}
+    browser.ON_MUSICA = lambda: pedido_musica.__setitem__("on", True)
 
     from canal_telegram import Telegram
     tg = Telegram(cfg, lambda t: oido.queue.put_nowait(("tg", t)),
@@ -494,7 +510,7 @@ async def main():
             log.exception("no pude guardar audio del wake")
 
     # --- reflexión nocturna: HARVIS relee el día y actualiza su memoria y
-    # el perfil del usuario en el vault (si hay uno configurado).
+    # el perfil del usuario en Cerebro, con sus propias tools.
     async def reflexion_diaria():
         from tools.memoria import HISTFILE
         rcfg = cfg.get("reflexion") or {}
@@ -584,6 +600,7 @@ async def main():
     privacy = False                # mic apagado; se sale desde el HUD
     redactor_mode = False          # anota todo sin cerebro (skill redactor)
     coach_mode = False             # charla + prompt de coach (skill coach)
+    music_mode = False             # solo órdenes de música; la letra se ignora
     # El coach charla mejor en otro modelo (Groq/Llama 70B, probado por
     # el usuario): cerebro aparte SIN tools, creado recién al entrar al modo.
     # El principal ni se entera; el hilo del coach persiste entre sesiones.
@@ -601,7 +618,7 @@ async def main():
     coach_turnos = 0
 
     async def guardar_sesion_coach(cc, turnos):
-        """Cierra la sesión de coach en el diario del vault (si hay)."""
+        """Cierra la sesión de coach en el diario del vault Cerebro."""
         try:
             r = await cc.ask(
                 "[modo coach] La sesión terminó. Escribí un registro breve "
@@ -777,7 +794,7 @@ async def main():
         if (not typed and len(text.split()) <= 5
                 and PRIVACY_RE.search(sin_tildes(text))):
             privacy = True
-            chat_mode = coach_mode = False
+            chat_mode = coach_mode = music_mode = False
             oido.mute()
             hud.set_state("muted")
             print("🔇 privacidad ON", flush=True)
@@ -805,6 +822,40 @@ async def main():
             beep_ok()
             continue
 
+        # MODO MÚSICA: solo pasan órdenes de música. Directas → tecla
+        # multimedia al toque; "poné/cambiá..." → cerebro; wake word →
+        # flujo normal; TODO lo demás (la letra de la canción) se ignora.
+        comando_musica = None
+        if music_mode and not typed:
+            st_m = sin_tildes(text.lower()).strip(".!?¿¡, ")
+            if match_wake(text, cfg) is not None:
+                pass          # "Harvis..." explícito: sigue el flujo normal
+            elif len(text.split()) > 8:
+                continue      # frase larga = letra de canción
+            elif EXIT_CHAT_RE.search(st_m):
+                music_mode = False
+                beep_ok()
+                hud.set_state("idle")
+                print("♪ modo música OFF", flush=True)
+                continue
+            else:
+                accion = next((a for rx, a in MUSICA_DIRECTAS
+                               if rx.search(st_m)), None)
+                if accion:
+                    from teclado import media as _media
+                    veces = 4 if accion.startswith("volume") else 1
+                    for _ in range(veces):
+                        _media("play" if accion in ("pause", "play")
+                               else accion)
+                    beep_ok()
+                    hud.actividad(f"♪ {accion}")
+                    log.info("modo música: %s", accion)
+                    continue
+                if MUSICA_CEREBRO_RE.search(st_m):
+                    comando_musica = text.strip()
+                else:
+                    continue  # ruido o letra: ni beep
+
         # Modo charla: todo lo que se oiga va al cerebro, sin wake word.
         if chat_mode and time.monotonic() - chat_last > chat_timeout:
             if coach_mode and cerebro_coach is not None and coach_turnos >= 2:
@@ -815,7 +866,9 @@ async def main():
             log.info("modo charla: cerrado por inactividad")
             print("💬 modo charla cerrado (silencio)", flush=True)
 
-        if chat_mode:
+        if comando_musica is not None:
+            command = comando_musica
+        elif chat_mode:
             command = text.strip()
             chat_last = time.monotonic()
             if EXIT_CHAT_RE.search(sin_tildes(command)):
@@ -875,7 +928,7 @@ async def main():
                 and ENTER_REDACTOR_RE.search(sin_tildes(command))):
             redactor_mode = True
             redactor_buffer.clear()
-            chat_mode = coach_mode = False
+            chat_mode = coach_mode = music_mode = False
             print("📝 modo redactor ON", flush=True)
             hud.set_state("chat")
             oido.mute()
@@ -893,6 +946,7 @@ async def main():
         # el prompt de coach ontológico (skill coach) prefijando cada turno.
         if command and ENTER_COACH_RE.search(sin_tildes(command)):
             chat_mode = coach_mode = True
+            music_mode = False
             coach_turnos = 0
             chat_last = time.monotonic()
             awaiting_command_until = 0.0
@@ -916,6 +970,7 @@ async def main():
         # Entrar al modo charla: "harvis, modo charla".
         if command and ENTER_CHAT_RE.search(sin_tildes(command)):
             chat_mode = True
+            music_mode = False
             chat_last = time.monotonic()
             awaiting_command_until = 0.0
             print("💬 modo charla ON", flush=True)
@@ -959,19 +1014,18 @@ async def main():
             memoria.append_historial(command, reply)
             trazas.cerrar_turno(reply)
             await tg.send(reply)
-            if pedido_privacidad["on"]:   # música pedida desde el celu
-                pedido_privacidad["on"] = False
-                privacy = True
+            if pedido_musica["on"]:   # música pedida desde el celu
+                pedido_musica["on"] = False
+                music_mode = True
                 chat_mode = coach_mode = False
-                oido.mute()
-                hud.set_state("muted")
-                log.info("privacidad AUTO: música sonando (tg)")
+                hud.actividad("♪ modo música")
+                log.info("modo música ON (tg)")
             continue
 
         # Modo privacidad por voz: mic apagado hasta el botón del HUD.
         if PRIVACY_RE.search(sin_tildes(command)):
             privacy = True
-            chat_mode = coach_mode = False
+            chat_mode = coach_mode = music_mode = False
             oido.mute()
             hud.set_state("muted")
             print("🔇 privacidad ON", flush=True)
@@ -1080,16 +1134,18 @@ async def main():
             coach_turnos += 1
         memoria.append_historial(command, reply)
         trazas.cerrar_turno(reply)
-        # ¿Arrancó música en este turno? → mic apagado (privacidad AUTO).
-        # Se reactiva con el botón del mic, como siempre.
-        if pedido_privacidad["on"]:
-            pedido_privacidad["on"] = False
-            privacy = True
+        # ¿Arrancó música en este turno? → MODO MÚSICA: escucha solo
+        # órdenes de música; la letra no matchea nada y se ignora.
+        if pedido_musica["on"]:
+            pedido_musica["on"] = False
+            music_mode = True
             chat_mode = coach_mode = False
-            hud.set_state("muted")
-            log.info("privacidad AUTO: música sonando")
-            print("🔇 privacidad automática (música)", flush=True)
-            continue   # sin unmute: queda sordo hasta el botón
+            oido.unmute()
+            hud.actividad("♪ modo música: pausa, siguiente, poné tal "
+                          "tema… «modo normal» para salir")
+            log.info("modo música ON")
+            print("♪ modo música ON", flush=True)
+            continue   # sin ventana de followup
         oido.unmute()
         # Conversación seguida estilo Alexa: unos segundos para repreguntar
         # sin repetir el wake word. El beep avisa que la ventana está abierta.

@@ -76,9 +76,9 @@ async def play_music(args):
                          + urllib.parse.quote_plus(q))
         r = _open(f"https://www.youtube.com/watch?v={m.group(1)}")
         _avisar_musica()
-        return (f"{r} Avisale al usuario que apagaste tu micrófono para no "
-                "confundir la música con su voz — que toque el mic del "
-                "panel cuando quiera hablarte.")
+        return (f"{r} Avisale al usuario que quedás en modo música: solo "
+                "escuchás pausa, siguiente, poné tal tema o cambiar de "
+                "playlist; con «modo normal» volvés a todo.")
     except Exception as e:
         log.warning("play_music: %s", e)
         return f"No pude buscar en YouTube: {e}"
@@ -159,9 +159,9 @@ async def youtube_music(args):
             if await asyncio.to_thread(_audio_navegador) > 0.01:
                 _avisar_musica()
                 return (f"Playlist '{guardado}' sonando, verificado. "
-                        "Avisale al usuario que apagaste tu micrófono para "
-                        "no confundir la música con su voz — que toque el "
-                        "mic del panel para hablarte.")
+                        "Avisale al usuario que quedás en modo música "
+                        "(pausa, siguiente, poné tal tema, cambiar "
+                        "playlist; «modo normal» para salir).")
             if not await asyncio.to_thread(_click_play):
                 return ("Abrí la playlist pero no encontré la ventana de "
                         "YouTube Music para darle play. Contale al usuario.")
@@ -170,9 +170,9 @@ async def youtube_music(args):
             if pico > 0.01:
                 _avisar_musica()
                 return (f"Playlist '{guardado}' SONANDO, verificado con el "
-                        "medidor de audio. Avisale al usuario que apagaste "
-                        "tu micrófono para no confundir la música con su "
-                        "voz — que toque el mic del panel para hablarte.")
+                        "medidor de audio. Avisale al usuario que quedás "
+                        "en modo música (pausa, siguiente, poné tal tema, "
+                        "cambiar playlist; «modo normal» para salir).")
             if pico < 0:
                 return (f"Playlist '{guardado}' abierta y le di play, pero "
                         "no pude verificar el audio. Preguntale al usuario "
