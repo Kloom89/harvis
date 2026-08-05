@@ -16,6 +16,10 @@
   <img alt="Brains" src="https://img.shields.io/badge/brains-Claude%20·%20Groq%20·%20Ollama%20·%20OpenAI%20·%20Gemini-35d6ff?style=flat-square">
 </p>
 
+<p align="center">
+  <i>Free for personal use — <b>not for sale</b>. See <a href="#license--personal-use-not-for-sale">License</a>.</i>
+</p>
+
 ---
 
 Most AI assistants stop at conversation. **HARVIS keeps going.**
@@ -32,13 +36,19 @@ thinking.
 **Need something it can't do yet?** Drop one Python file into `skills/` and it
 learns a new trick. No SDK, no boilerplate.
 
-<p align="center">
-  <img src="assets/hud-panel.png" width="330" alt="HARVIS HUD">
-  &nbsp;&nbsp;
-  <img src="assets/hud-capsule.png" width="200" alt="HARVIS idle capsule">
-</p>
-
-<p align="center"><i>A floating capsule that breathes while it listens — click it and the full HUD opens.</i></p>
+<table align="center">
+  <tr>
+    <td align="center" valign="top">
+      <img src="assets/hud-panel.png" width="320" alt="HARVIS HUD panel"><br>
+      <sub>The HUD: live chat, brain selector, skills, mic and abort</sub>
+    </td>
+    <td align="center" valign="top">
+      <img src="assets/hud-capsule.png" width="220" alt="HARVIS idle capsule"><br>
+      <sub>Idle, it's just a capsule that breathes while it listens.<br>
+      Click it and the panel opens.</sub>
+    </td>
+  </tr>
+</table>
 
 ## What it feels like
 
