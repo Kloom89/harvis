@@ -23,6 +23,7 @@ HARVIS is a JARVIS-style voice assistant that actually **does things on your PC*
 - **Proactive**: morning briefing (weather + pending + Teams), nightly self-reflection (it updates its own memory of you), homelab watcher that warns when a container dies.
 - **Interruptible**: F9 or ⏹ shuts it up and aborts the turn instantly.
 - **Telegram channel**: talk to it from your phone; single-owner pairing.
+- **Auto-updates**: it checks the repo daily and tells you when there's a new version — say *"actualizate"* and it pulls, installs deps and restarts itself (git installs only).
 - **Observability**: every turn is traced to `turnos.jsonl` (command → brain → each tool call with duration → reply). When something fails, you read *why* instead of guessing.
 
 > The HUD shows a small rotating banner with other [KloomStudio](https://kloomstudio.com.ar) apps — that's how the free version pays for itself. Keeping it on is how you say thanks 😉
