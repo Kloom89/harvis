@@ -615,11 +615,16 @@ async def main():
     silence_base = float((cfg.get("vad") or {}).get("silence_end", 0.9))
     silence_chat = float((cfg.get("vad") or {})
                          .get("silence_end_chat", 1.6))
+    max_base = float((cfg.get("vad") or {}).get("max_utterance_normal", 25))
+    max_chat = float((cfg.get("vad") or {}).get("max_utterance", 90))
 
     while True:
         # En charla/coach el VAD espera más antes de cortar: pausar para
-        # pensar no es terminar de hablar.
+        # pensar no es terminar de hablar, y los descargos son largos. En
+        # modo normal, frases CORTAS: con tope alto el ruido de fondo arma
+        # segmentos de 90 s donde el "Harvis" queda enterrado.
         oido.silence_end = silence_chat if chat_mode else silence_base
+        oido.max_utterance = max_chat if chat_mode else max_base
         kind, audio = await oido.queue.get()
 
         # Botón del mic en el HUD: única salida del modo privacidad.
@@ -728,6 +733,21 @@ async def main():
             # utterance por VAD: solo interesa si trae el wake word
             text = await asyncio.to_thread(stt.transcribe, audio)
             if not text:
+                # Whisper no entendió NADA (o lo descartó por confianza) —
+                # justo el caso de la huella: si el SONIDO es tu "Harvis",
+                # dispara igual. Sin esto, un "Harvis" masticado moría acá.
+                if (huella is not None and not chat_mode
+                        and not redactor_mode and not privacy
+                        and audio.size <= 16000 * 6
+                        and huella.match(audio)):
+                    log.info("wake por huella (whisper no entendió)")
+                    beep_wake()
+                    oido.mute()
+                    print("🔊 ¿Señor?", flush=True)
+                    hud.set_state("armed")
+                    await boca.say("¿Señor?")
+                    oido.unmute()
+                    awaiting_command_until = time.monotonic() + followup
                 continue
             if log_all_speech:
                 log.debug("oído: %r", text)

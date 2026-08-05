@@ -79,8 +79,11 @@ vad:
   silence_end: 0.9
   # En modo charla/coach: más respiro para pensar sin que te corte.
   silence_end_chat: 1.6
-  # Máximo de una frase (en modo coach los descargos son largos).
+  # Máximo de una frase EN MODO CHARLA/COACH (descargos largos).
   max_utterance: 90
+  # Máximo en modo normal: corto a propósito — con tope alto, el ruido de
+  # fondo arma segmentos gigantes y el "Harvis" queda enterrado adentro.
+  max_utterance_normal: 25
 
 tts:
   enabled: true
