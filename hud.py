@@ -582,28 +582,10 @@ class Hud:
         import ctypes
         return ctypes.windll.user32.FindWindowW(None, "HARVIS")
 
-    def _forma_orbe(self, orbe: bool):
-        """Recorta la ventana (SetWindowRgn) para que no se vea el
-        rectángulo del sistema: cápsula en modo orbe, esquinas redondeadas
-        en el panel."""
-        import ctypes
-        try:
-            u, g = ctypes.windll.user32, ctypes.windll.gdi32
-            hwnd = self._hwnd()
-            if not hwnd:
-                return
-
-            class _R(ctypes.Structure):
-                _fields_ = [("l", ctypes.c_long), ("t", ctypes.c_long),
-                            ("r", ctypes.c_long), ("b", ctypes.c_long)]
-            r = _R()
-            u.GetWindowRect(hwnd, ctypes.byref(r))
-            w, h = r.r - r.l, r.b - r.t
-            radio = h if orbe else 28
-            u.SetWindowRgn(hwnd, g.CreateRoundRectRgn(0, 0, w + 1, h + 1,
-                                                      radio, radio), True)
-        except Exception:
-            log.debug("forma de la ventana falló", exc_info=True)
+    # NOTA: nada de SetWindowRgn acá — en Win11 DWM IGNORA la región al
+    # renderizar (solo la respeta para el hit-test), así que el "recorte"
+    # dejaba una placa gris fantasma detrás. La cápsula es la ventana
+    # entera con fondo parejo y las esquinas redondeadas nativas.
 
     def toggle(self):
         self.expanded = not self.expanded
@@ -613,10 +595,7 @@ class Hud:
         self.window.resize(w, h)
         self.window.move(ancho - w - MARGIN, alto - h - MARGIN)
 
-        def _acomodar():
-            self._ajustar_posicion()
-            self._forma_orbe(not self.expanded)
-        threading.Timer(0.2, _acomodar).start()
+        threading.Timer(0.2, self._ajustar_posicion).start()
         self._js(f"hud.expanded({json.dumps(self.expanded)})")
 
     def send_text(self, text: str):
@@ -775,7 +754,6 @@ class Hud:
     def _js_flush(self):
         self._set_taskbar_icon()
         self._ajustar_posicion()
-        self._forma_orbe(True)
         self.window.expose(self.toggle, self.send_text, self.switch_brain,
                            self.get_timers, self.toggle_mic,
                            self.get_skills_data, self.save_comandos,
@@ -820,7 +798,7 @@ def serve_main_thread(timeout: float = 300):
         on_top=True, width=w, height=h,
         min_size=(ORB[0], ORB[1]),  # el default es (200,100) y pisa al orbe
         x=ancho - w - MARGIN, y=alto - h - MARGIN,
-        background_color="#050b12")
+        background_color="#0b2134")
     hud.window.events.loaded += hud._js_flush
     webview.start(gui="edgechromium", private_mode=True)
 
