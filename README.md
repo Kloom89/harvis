@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="assets/hero.png" alt="HARVIS — the open-source voice AI assistant for Windows">
+  <img src="assets/hero.png" alt="HARVIS — the hackable voice AI assistant for Windows">
 </p>
 
 <p align="center">
   <b>Your Windows PC. Controlled by voice. Powered by the AI you choose.</b><br>
-  An open-source, hackable <b>voice AI assistant</b> for Windows — by
-  <a href="https://kloomstudio.com.ar">KloomStudio.com.ar</a>
+  A hackable <b>voice AI assistant</b> for Windows — full source, free for
+  personal use — by <a href="https://kloomstudio.com.ar">KloomStudio.com.ar</a>
 </p>
 
 <p align="center">
@@ -226,7 +226,9 @@ fork. PRs that make the built-in prompts multilingual are welcome.
 ## License — personal use, not for sale
 
 HARVIS is released under the
-[PolyForm Noncommercial 1.0.0](LICENSE) license.
+[PolyForm Noncommercial 1.0.0](LICENSE) license. The full source is here and
+you can do almost anything with it — but to be precise, that's a
+*source-available* license, not an OSI-approved open-source one.
 
 **You can** use it, modify it, fork it, publish your skills and share it with
 whoever you want, for personal projects.
