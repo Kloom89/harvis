@@ -67,7 +67,7 @@ stt:
     # variantes que Whisper usa para el nombre — cosmético, el wake ya las
     # acepta igual. OJO no mapear nombres reales que puedas dictar en
     # mensajes (javier queda afuera a propósito).
-    - pattern: '(?i)\b(harvey|harveys|harry|jarvis|harvis|jervis|hergis|charvis|sharvis|chervis|harbis|jarbis|harvich|jarvish|harvish|harvest)\b'
+    - pattern: '(?i)\b(harvey|harveys|harry|jarvis|harvis|jervis|hergis|charvis|sharvis|chervis|harbis|jarbis|harvich|jarvish|harvish|harvest|harley|harleys)\b'
       replace: Harvis
 
 briefing:

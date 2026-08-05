@@ -822,7 +822,8 @@ async def main():
                 if (huella is not None and not chat_mode
                         and not redactor_mode and not privacy
                         and audio.size <= 16000 * 6
-                        and huella.match(audio)):
+                        and huella.match(audio,
+                                         margen=3.5 if music_mode else 0.0)):
                     log.info("wake por huella (whisper no entendió)")
                     beep_wake()
                     oido.mute()

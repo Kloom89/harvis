@@ -141,7 +141,10 @@ class Huella:
                 mejores = min(mejores, d)
         return mejores
 
-    def match(self, audio: np.ndarray) -> bool:
+    def match(self, audio: np.ndarray, margen: float = 0.0) -> bool:
+        """margen: tolerancia extra (p.ej. con música de fondo la voz
+        mezclada da distancias más altas; las letras dan 18+ igual)."""
         d = self.distancia(audio)
-        log.debug("huella: distancia %.1f (umbral %.1f)", d, self.umbral)
-        return d < self.umbral
+        log.debug("huella: distancia %.1f (umbral %.1f%+.1f)", d,
+                  self.umbral, margen)
+        return d < self.umbral + margen
