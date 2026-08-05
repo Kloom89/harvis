@@ -418,6 +418,11 @@ async def main():
     import registry as _registry
     _registry.ON_TOOL = _mostrar_actividad
 
+    # Música sonando → privacidad AUTOMÁTICA al cerrar el turno: si no, el
+    # mic transcribe la letra y HARVIS le contesta a la canción.
+    pedido_privacidad = {"on": False}
+    browser.ON_MUSICA = lambda: pedido_privacidad.__setitem__("on", True)
+
     from canal_telegram import Telegram
     tg = Telegram(cfg, lambda t: oido.queue.put_nowait(("tg", t)),
                   voice_sink=lambda r: loop.call_soon_threadsafe(
@@ -954,6 +959,13 @@ async def main():
             memoria.append_historial(command, reply)
             trazas.cerrar_turno(reply)
             await tg.send(reply)
+            if pedido_privacidad["on"]:   # música pedida desde el celu
+                pedido_privacidad["on"] = False
+                privacy = True
+                chat_mode = coach_mode = False
+                oido.mute()
+                hud.set_state("muted")
+                log.info("privacidad AUTO: música sonando (tg)")
             continue
 
         # Modo privacidad por voz: mic apagado hasta el botón del HUD.
@@ -1068,6 +1080,16 @@ async def main():
             coach_turnos += 1
         memoria.append_historial(command, reply)
         trazas.cerrar_turno(reply)
+        # ¿Arrancó música en este turno? → mic apagado (privacidad AUTO).
+        # Se reactiva con el botón del mic, como siempre.
+        if pedido_privacidad["on"]:
+            pedido_privacidad["on"] = False
+            privacy = True
+            chat_mode = coach_mode = False
+            hud.set_state("muted")
+            log.info("privacidad AUTO: música sonando")
+            print("🔇 privacidad automática (música)", flush=True)
+            continue   # sin unmute: queda sordo hasta el botón
         oido.unmute()
         # Conversación seguida estilo Alexa: unos segundos para repreguntar
         # sin repetir el wake word. El beep avisa que la ventana está abierta.

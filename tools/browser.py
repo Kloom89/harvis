@@ -10,6 +10,16 @@ from registry import kloom_tool
 log = logging.getLogger("kloom.tools.browser")
 
 CDP_PORT = 9222  # kloom.py lo pisa desde config.yaml
+ON_MUSICA = None  # lo setea kloom: al arrancar música → privacidad AUTO
+                  # (si no, el mic confunde la música con habla del usuario)
+
+
+def _avisar_musica():
+    if ON_MUSICA is not None:
+        try:
+            ON_MUSICA()
+        except Exception:
+            pass
 
 
 def _open(url: str) -> str:
@@ -64,7 +74,11 @@ async def play_music(args):
         if not m:
             return _open("https://www.youtube.com/results?search_query="
                          + urllib.parse.quote_plus(q))
-        return _open(f"https://www.youtube.com/watch?v={m.group(1)}")
+        r = _open(f"https://www.youtube.com/watch?v={m.group(1)}")
+        _avisar_musica()
+        return (f"{r} Avisale al usuario que apagaste tu micrófono para no "
+                "confundir la música con su voz — que toque el mic del "
+                "panel cuando quiera hablarte.")
     except Exception as e:
         log.warning("play_music: %s", e)
         return f"No pude buscar en YouTube: {e}"
@@ -143,16 +157,22 @@ async def youtube_music(args):
             _open(f"https://music.youtube.com/watch?list={pid}")
             await asyncio.sleep(7)   # que cargue el reproductor
             if await asyncio.to_thread(_audio_navegador) > 0.01:
-                return (f"Playlist '{guardado}' sonando (el navegador "
-                        "autoplayeó). Verificado con el medidor de audio.")
+                _avisar_musica()
+                return (f"Playlist '{guardado}' sonando, verificado. "
+                        "Avisale al usuario que apagaste tu micrófono para "
+                        "no confundir la música con su voz — que toque el "
+                        "mic del panel para hablarte.")
             if not await asyncio.to_thread(_click_play):
                 return ("Abrí la playlist pero no encontré la ventana de "
                         "YouTube Music para darle play. Contale al usuario.")
             await asyncio.sleep(1.5)
             pico = await asyncio.to_thread(_audio_navegador)
             if pico > 0.01:
+                _avisar_musica()
                 return (f"Playlist '{guardado}' SONANDO, verificado con el "
-                        "medidor de audio del navegador.")
+                        "medidor de audio. Avisale al usuario que apagaste "
+                        "tu micrófono para no confundir la música con su "
+                        "voz — que toque el mic del panel para hablarte.")
             if pico < 0:
                 return (f"Playlist '{guardado}' abierta y le di play, pero "
                         "no pude verificar el audio. Preguntale al usuario "
