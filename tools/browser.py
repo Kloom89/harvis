@@ -87,22 +87,79 @@ def _playlists() -> dict:
         return {}
 
 
-@kloom_tool("youtube_music", "Reproduce una playlist DEL USUARIO en YouTube Music: si está aprendida, EMPIEZA A SONAR sola. Para 'poné mi playlist X'. Si no la conozco, la respuesta te dice qué pedirle al usuario. NUNCA uses play_music para playlists.", {"nombre": str})
+_NAVEGADORES = {"opera.exe", "opera_gx.exe", "chrome.exe", "msedge.exe",
+                "firefox.exe", "brave.exe", "vivaldi.exe"}
+
+
+def _audio_navegador() -> float:
+    """Pico de audio real del navegador (pycaw): la prueba de que SUENA."""
+    import time as _t
+    try:
+        from pycaw.pycaw import AudioUtilities, IAudioMeterInformation
+        pico = 0.0
+        for s in AudioUtilities.GetAllSessions():
+            try:
+                if s.Process and s.Process.name().lower() in _NAVEGADORES:
+                    m = s._ctl.QueryInterface(IAudioMeterInformation)
+                    for _ in range(20):
+                        pico = max(pico, m.GetPeakValue())
+                        _t.sleep(0.05)
+            except Exception:
+                pass
+        return pico
+    except Exception:
+        return -1.0   # sin pycaw: no se puede verificar
+
+
+def _click_play():
+    """Click en el ▶ del reproductor de YT Music (barra inferior izquierda,
+    posición fija: ~133 px del borde izquierdo, ~45 px del inferior)."""
+    import ctypes
+    import time as _t
+    import win32gui
+    from tools.windows import _find_window, focus_hwnd
+    h = _find_window("youtube music")
+    if not h:
+        return False
+    focus_hwnd(h)
+    _t.sleep(0.5)
+    r = win32gui.GetWindowRect(h)
+    u = ctypes.windll.user32
+    u.SetCursorPos(r[0] + 133, r[3] - 45)
+    _t.sleep(0.2)
+    u.mouse_event(2, 0, 0, 0, 0)
+    _t.sleep(0.06)
+    u.mouse_event(4, 0, 0, 0, 0)
+    return True
+
+
+@kloom_tool("youtube_music", "Reproduce una playlist DEL USUARIO en YouTube Music y VERIFICA que suene (mide el audio del navegador). Para 'poné mi playlist X'. Si no la conozco, la respuesta te dice qué pedirle al usuario. NUNCA uses play_music ni open_url para playlists.", {"nombre": str})
 async def youtube_music(args):
+    import asyncio
     nombre = args["nombre"].strip().lower()
     lisas = _playlists()
     for guardado, pid in lisas.items():
         if nombre in guardado or guardado in nombre:
-            import asyncio
-            r = _open(f"https://music.youtube.com/watch?list={pid}")
-            # el navegador bloquea el autoplay: cuando el reproductor cargó,
-            # la tecla multimedia PLAY arranca la sesión recién abierta.
-            await asyncio.sleep(6)
-            from teclado import media
-            media("play")
-            return (f"{r} Playlist '{guardado}' abierta y le di play con "
-                    "la tecla multimedia. Confirmá al usuario que ya "
-                    "debería estar sonando.")
+            _open(f"https://music.youtube.com/watch?list={pid}")
+            await asyncio.sleep(7)   # que cargue el reproductor
+            if await asyncio.to_thread(_audio_navegador) > 0.01:
+                return (f"Playlist '{guardado}' sonando (el navegador "
+                        "autoplayeó). Verificado con el medidor de audio.")
+            if not await asyncio.to_thread(_click_play):
+                return ("Abrí la playlist pero no encontré la ventana de "
+                        "YouTube Music para darle play. Contale al usuario.")
+            await asyncio.sleep(1.5)
+            pico = await asyncio.to_thread(_audio_navegador)
+            if pico > 0.01:
+                return (f"Playlist '{guardado}' SONANDO, verificado con el "
+                        "medidor de audio del navegador.")
+            if pico < 0:
+                return (f"Playlist '{guardado}' abierta y le di play, pero "
+                        "no pude verificar el audio. Preguntale al usuario "
+                        "si suena.")
+            return (f"Abrí la playlist '{guardado}' y cliqueé play, pero el "
+                    "medidor dice que NO está sonando. Decíselo al usuario "
+                    "tal cual — no digas que suena.")
     conocidas = ", ".join(lisas) or "ninguna todavía"
     return (f"No tengo aprendida la playlist '{args['nombre']}' "
             f"(conozco: {conocidas}). Pedile al usuario que abra la "

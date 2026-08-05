@@ -12,6 +12,7 @@ pywebview
 pywinauto
 pywin32
 PyYAML
+pycaw          # medidor de audio: verificar que la música REALMENTE suena
 
 # GPU (opcional, recomendado): DLLs de CUDA para faster-whisper.
 # Sin esto cae solo a CPU con el modelo "medium".
