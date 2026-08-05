@@ -20,6 +20,8 @@
   <i>Free for personal use — <b>not for sale</b>. See <a href="#license--personal-use-not-for-sale">License</a>.</i>
 </p>
 
+<p align="center"><a href="README_ES.md">🇦🇷 Léelo en español</a></p>
+
 ---
 
 Most AI assistants stop at conversation. **HARVIS keeps going.**
@@ -240,37 +242,7 @@ interesting with it, open an issue and show us.
 
 ---
 
-<details>
-<summary><b>Léeme en español</b></summary>
-
-**HARVIS es un asistente de IA por voz, open source, para Windows —
-gratis para uso personal, no se puede vender.** Decís su
-nombre y te escucha, piensa y **hace**: abre apps, pone la playlist que
-querías, te lee Teams, redacta un WhatsApp por nombre de contacto, saca una
-captura y *ve* qué error tira, revisa tu homelab por SSH y te contesta con voz
-natural mientras todavía está pensando.
-
-- **El wake word no sale de tu PC**: Whisper local + fonética + tu **huella de
-  voz** (grabás seis tomas y te reconoce por sonido, no solo por transcripción).
-- **Te escucha con la música puesta**: cancelación de eco WebRTC real con
-  referencia por loopback WASAPI (~22 dB medidos).
-- **El cerebro lo elegís vos**: Claude, Groq, Ollama (local y gratis), OpenAI,
-  Gemini, Kimi. Se cambia por voz o desde el HUD, y todos usan las mismas tools.
-- **Modos**: charla, redactor (dictado libre), música (detecta que hay música
-  sonando, solo acepta órdenes de música y responde con un ✓ silencioso) y
-  coach.
-- **Skills**: un `.py` en `skills/` suma tools, contexto y vigías de fondo; se
-  instala desde el HUD sin reiniciar. Guía en [SKILLS.md](SKILLS.md).
-
-**Instalar**: cloná el repo, `python -m venv .venv`,
-`.venv\Scripts\pip install -r requirements.txt`, poné tus keys por variables de
-entorno (`setx GROQ_API_KEY ...`) y corré `kloom.cmd`. Decí **"Harvis"**.
-
-Todo corre en tu máquina: el audio nunca sale de tu PC.
-
-**Licencia**: [PolyForm Noncommercial 1.0.0](LICENSE). Usalo, modificalo,
-forkealo y compartilo para proyectos personales. Lo que no podés hacer es
-venderlo, ni vender un producto o servicio construido sobre él. ¿Licencia
-comercial? Escribinos a [KloomStudio](https://kloomstudio.com.ar).
-
-</details>
+<p align="center">
+  <b><a href="README_ES.md">🇦🇷 Léelo en español →</a></b><br>
+  <sub>Mismo README, completo, en castellano.</sub>
+</p>
