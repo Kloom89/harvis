@@ -71,18 +71,26 @@ class CerebroClaude:
             max_buffer_size=10 * 1024 * 1024,
         )
         self.client: ClaudeSDKClient | None = None
+        # El CLI tarda ~50 s en arranque frío: se conecta de fondo y quien
+        # necesite el cerebro espera acá en vez de abrir una segunda sesión.
+        self._listo = False
+        self._lock = asyncio.Lock()
 
     async def connect(self):
-        for attempt in (1, 2):
-            self.client = ClaudeSDKClient(options=self.options)
-            try:
-                await self.client.connect()
+        async with self._lock:
+            if self._listo:
                 return
-            except Exception:
-                if attempt == 2:
-                    raise
-                log.warning("connect falló, reintento...")
-                await asyncio.sleep(2)
+            for attempt in (1, 2):
+                self.client = ClaudeSDKClient(options=self.options)
+                try:
+                    await self.client.connect()
+                    self._listo = True
+                    return
+                except Exception:
+                    if attempt == 2:
+                        raise
+                    log.warning("connect falló, reintento...")
+                    await asyncio.sleep(2)
 
     async def ask(self, text: str) -> str:
         # El subproceso del SDK puede morir solo (exit 129 visto corriendo
@@ -96,7 +104,7 @@ class CerebroClaude:
                 await self.client.disconnect()
             except Exception:
                 pass
-            self.client = None
+            self.client, self._listo = None, False
             return await self._ask(text)
 
     async def _ask(self, text: str) -> str:
@@ -124,12 +132,12 @@ class CerebroClaude:
                 await self.client.disconnect()
             except Exception:
                 pass
-            self.client = None
+            self.client, self._listo = None, False
             async for t in self._stream(text):
                 yield t
 
     async def _stream(self, text: str):
-        if self.client is None:
+        if not self._listo:
             await self.connect()
         await self.client.query(text)
         # El texto sale de los deltas (StreamEvent); los TextBlock del

@@ -94,17 +94,19 @@ html, body { background: var(--bg); height: 100%; overflow: hidden;
   user-select: none; }
 
 /* ---------- orbe ---------- */
+/* El fondo va en el BODY y la forma la da el recorte de la ventana
+   (SetWindowRgn). Nada de degradados RADIALES acá: dibujan un óvalo claro
+   que se lee como una SEGUNDA cápsula adentro. Solo el ring del borde,
+   que sí sigue la misma forma. */
 #orb-wrap { position: fixed; inset: 0; display: flex; align-items: center;
-  justify-content: center; gap: 8px;
-  background:
-    radial-gradient(120% 160% at 15% 0%, #103048, transparent 60%),
-    radial-gradient(120% 160% at 100% 100%, #0a2740, transparent 55%),
-    linear-gradient(150deg, #071a2a, #040d15);
-  border: 1px solid #14344b; border-radius: 999px; }
+  justify-content: center; gap: 8px; }
+body:not(.expanded) { background: #0b2134; }
+/* Glows CONTENIDOS: un halo ancho dentro de la cápsula se desparrama y
+   se lee como una segunda cápsula adentro. */
 #orb { width: 58px; height: 58px; border-radius: 50%; position: relative;
   flex: none; cursor: pointer;
   background: url(__AVATAR__) center/cover, #071a28;
-  box-shadow: 0 0 10px 2px rgba(53, 214, 255, .35);
+  box-shadow: 0 0 6px rgba(53, 214, 255, .3);
   transition: box-shadow .4s ease, filter .4s ease; }
 #orb-mute { width: 32px; height: 32px; flex: none; border-radius: 50%;
   border: 1px solid var(--line); background: rgba(4, 16, 26, .75);
@@ -121,14 +123,14 @@ html, body { background: var(--bg); height: 100%; overflow: hidden;
 
 .idle #orb { animation: breathg 3.2s ease-in-out infinite; }
 @keyframes breathg {
-  50% { box-shadow: 0 0 8px 1px rgba(53, 214, 255, .15); } }
+  50% { box-shadow: 0 0 4px rgba(53, 214, 255, .12); } }
 
-.armed #orb { box-shadow: 0 0 30px 8px rgba(53, 214, 255, .65); }
+.armed #orb { box-shadow: 0 0 14px 2px rgba(53, 214, 255, .6); }
 .armed #orb::before { border-color: var(--cyan);
   animation: pulse 1s ease-in-out infinite; }
 @keyframes pulse { 50% { transform: scale(1.1); opacity: .4; } }
 
-.thinking #orb { box-shadow: 0 0 26px 5px rgba(255, 181, 71, .55); }
+.thinking #orb { box-shadow: 0 0 14px 2px rgba(255, 181, 71, .55); }
 .thinking #orb::before { border-color: var(--amber);
   border-top-color: transparent; border-right-color: transparent;
   animation: spin 1s linear infinite; }
@@ -136,13 +138,13 @@ html, body { background: var(--bg); height: 100%; overflow: hidden;
 
 .speaking #orb { animation: talkg .5s ease-in-out infinite; }
 @keyframes talkg {
-  50% { box-shadow: 0 0 34px 10px rgba(53, 214, 255, .8); } }
+  50% { box-shadow: 0 0 16px 3px rgba(53, 214, 255, .8); } }
 
-.chat #orb { box-shadow: 0 0 26px 6px rgba(61, 214, 140, .6); }
+.chat #orb { box-shadow: 0 0 14px 2px rgba(61, 214, 140, .6); }
 .chat #orb::before { border-color: var(--green);
   animation: pulse 2s ease-in-out infinite; }
 
-.muted #orb { box-shadow: 0 0 10px 2px rgba(255, 181, 71, .25);
+.muted #orb { box-shadow: 0 0 6px rgba(255, 181, 71, .25);
   filter: grayscale(1) brightness(.55); }
 .muted #orb::before { border-color: #57320f; }
 body.expanded.muted #mini-orb {
@@ -793,9 +795,11 @@ _INSTANCE: Hud | None = None
 _REGISTERED = threading.Event()
 
 
-def serve_main_thread(timeout: float = 60):
+def serve_main_thread(timeout: float = 300):
     """Bloquea el thread principal sirviendo la ventana del HUD. Vuelve si
-    nadie registra un HUD (p. ej. main() murió antes)."""
+    nadie registra un HUD (p. ej. main() murió antes). El plazo es generoso:
+    cargar Whisper en una GPU ocupada más conectar el cerebro puede pasar
+    el minuto, y rendirse deja a HARVIS sin ventana."""
     if not _REGISTERED.wait(timeout):
         log.warning("HUD: nadie se registró, no levanto ventana")
         return

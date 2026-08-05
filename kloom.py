@@ -327,7 +327,19 @@ async def main():
     boca = Boca(cfg)
     brain_actual = (cfg.get("llm") or {}).get("brain", "claude")
     cerebro = crear_cerebro(cfg, all_tools)
-    await cerebro.connect()
+
+    # Conectar en SEGUNDO PLANO: el CLI de Claude tarda ~50 s en frío y
+    # bloqueaba todo el arranque (el HUD se rendía sin levantar ventana).
+    # Para cuando termine de cargar el mic ya suele estar listo; si llega
+    # un comando antes, connect() lo hace esperar (no abre otra sesión).
+    async def _conectar_cerebro(c):
+        try:
+            await c.connect()
+            log.info("cerebro %s conectado", brain_actual)
+        except Exception:
+            log.exception("%s no conectó; reintenta al primer comando",
+                          brain_actual)
+    asyncio.create_task(_conectar_cerebro(cerebro))
 
     loop = asyncio.get_running_loop()
     oido = Oido(cfg, loop)
