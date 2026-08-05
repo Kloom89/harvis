@@ -419,7 +419,9 @@ async def main():
     _registry.ON_TOOL = _mostrar_actividad
 
     from canal_telegram import Telegram
-    tg = Telegram(cfg, lambda t: oido.queue.put_nowait(("tg", t)))
+    tg = Telegram(cfg, lambda t: oido.queue.put_nowait(("tg", t)),
+                  voice_sink=lambda r: loop.call_soon_threadsafe(
+                      oido.queue.put_nowait, ("tg_voice", r)))
     if tg.enabled:
         asyncio.create_task(tg.poll())
 
@@ -724,9 +726,20 @@ async def main():
 
         # comando tipeado (HUD) o por Telegram: mismo pipeline, sin STT ni
         # wake word. Lo de Telegram responde al chat, no al parlante.
-        por_tg = kind == "tg"
-        typed = kind in ("text", "tg")
-        if typed:
+        por_tg = kind in ("tg", "tg_voice")
+        typed = kind in ("text", "tg", "tg_voice")
+        if kind == "tg_voice":
+            # audio de voz del celu: lo transcribe el Whisper local
+            text = await asyncio.to_thread(stt.transcribe, str(audio))
+            try:
+                os.remove(str(audio))
+            except OSError:
+                pass
+            log.info("tg voz: %r", text)
+            if not text.strip():
+                await tg.send("No entendí ese audio, señor.")
+                continue
+        elif typed:
             text = str(audio).strip()
             log.info("%s: %r", "tg" if por_tg else "hud", text)
         else:

@@ -74,16 +74,18 @@ class Stt:
                                         language=self.language, beam_size=1)
         list(segs)
 
-    def transcribe(self, audio: np.ndarray) -> str:
-        if audio.size == 0:
-            return ""
-        # Ganancia automática: un mic lejano o con perilla baja entrega
-        # picos de 0.03-0.06 y Whisper pierde confianza → el filtro come
-        # frases reales. Se normaliza a ~0.5 con tope de 15x para no
-        # amplificar ruido puro.
-        peak = float(np.abs(audio).max())
-        if 0.002 < peak < 0.35:
-            audio = audio * min(0.5 / peak, 15.0)
+    def transcribe(self, audio) -> str:
+        """audio: np.ndarray 16 kHz o RUTA a un archivo (voz de Telegram —
+        faster-whisper decodifica ogg/opus solo, vía PyAV)."""
+        if isinstance(audio, np.ndarray):
+            if audio.size == 0:
+                return ""
+            # Ganancia automática: un mic lejano entrega picos de 0.03-0.06
+            # y Whisper pierde confianza → el filtro come frases reales. Se
+            # normaliza a ~0.5 con tope de 15x para no amplificar ruido.
+            peak = float(np.abs(audio).max())
+            if 0.002 < peak < 0.35:
+                audio = audio * min(0.5 / peak, 15.0)
         # Un fallo de Whisper (CUDA OOM cuando la GPU está exigida) NO puede
         # matar a HARVIS: reintento corto y si no, se descarta la frase.
         def _correr():
