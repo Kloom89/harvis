@@ -144,11 +144,74 @@ def _duck_navegador(bajar: bool):
         log.debug("duck falló", exc_info=True)
 
 
-# Botones de la barra de YT Music (px desde el borde izquierdo/inferior
-# de la ventana, MEDIDOS con captura): ⏮ 78 · ▶ 128 · ⏭ 183, a 40 px del
-# borde inferior.
-_BARRA_X = {"previous": 78, "play": 128, "pause": 128, "next": 183}
-_BARRA_Y = 40
+# Botones de la barra de YT Music (px desde el borde izquierdo/inferior,
+# MEDIDOS con captura). La ventana APP (Edge --app) y la pestaña de un
+# navegador tienen layouts distintos.
+_BARRA = {
+    "app": {"previous": 35, "play": 88, "pause": 88, "next": 143, "y": 45},
+    "tab": {"previous": 78, "play": 128, "pause": 128, "next": 183, "y": 40},
+}
+
+
+def _exe_app_musica():
+    """Edge para la ventana --app dedicada de música (usa la sesión del
+    usuario, como su PWA de YouTube Music)."""
+    for p in (r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+              r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"):
+        if _os.path.exists(p):
+            return p
+    return None
+
+
+def _ventana_ytmusic():
+    """hwnd de la ventana APP de YouTube Music (PWA/--app de Edge) —
+    preferida SIEMPRE sobre pestañas de un navegador común."""
+    try:
+        import psutil
+        import win32gui
+        import win32process
+        hits = []
+
+        def cb(h, _):
+            if win32gui.IsWindowVisible(h):
+                t = win32gui.GetWindowText(h).lower()
+                if "youtube music" in t:
+                    try:
+                        _, pid = win32process.GetWindowThreadProcessId(h)
+                        exe = psutil.Process(pid).name().lower()
+                    except Exception:
+                        exe = ""
+                    hits.append((h, exe))
+        win32gui.EnumWindows(cb, None)
+        for h, exe in hits:
+            if exe == "msedge.exe":
+                return h, "app"
+        return (hits[0][0], "tab") if hits else None
+    except Exception:
+        return None
+
+
+def _abrir_app_musica(url: str) -> str:
+    """Abre la música en la ventana APP dedicada (Edge --app, sesión del
+    usuario). Cierra la instancia anterior para no acumular ventanas.
+    Fallback: navegador default."""
+    import subprocess
+    import time as _t
+    exe = _exe_app_musica()
+    if not exe:
+        return _open(url)
+    try:
+        import win32con
+        import win32gui
+        vent = _ventana_ytmusic()
+        if vent and vent[1] == "app":
+            win32gui.PostMessage(vent[0], win32con.WM_CLOSE, 0, 0)
+            _t.sleep(0.7)
+        subprocess.Popen([exe, f"--app={url}"])
+        return "Abierto en la app de YouTube Music."
+    except Exception as e:
+        log.warning("app música falló: %s", e)
+        return _open(url)
 
 
 def control_musica(accion: str) -> bool:
@@ -161,17 +224,22 @@ def control_musica(accion: str) -> bool:
     try:
         import win32gui
         from tools.windows import _find_window, focus_hwnd
-        x_off = _BARRA_X.get(accion)
-        if x_off is None:
-            return False
-        h = _find_window("youtube music")
+        vent = _ventana_ytmusic()
+        if vent is None:
+            h = _find_window("youtube music")
+            tipo = "tab"
+        else:
+            h, tipo = vent
         if not h:
+            return False
+        x_off = _BARRA[tipo].get(accion)
+        if x_off is None:
             return False
         focus_hwnd(h)
         _t.sleep(0.35)
         r = win32gui.GetWindowRect(h)
         u = ctypes.windll.user32
-        u.SetCursorPos(r[0] + x_off, r[3] - _BARRA_Y)
+        u.SetCursorPos(r[0] + x_off, r[3] - _BARRA[tipo]["y"])
         _t.sleep(0.15)
         u.mouse_event(2, 0, 0, 0, 0)
         _t.sleep(0.06)
@@ -196,25 +264,8 @@ def _parar_actual():
 
 
 def _click_play():
-    """Click en el ▶ del reproductor de YT Music (barra inferior izquierda,
-    posición fija: ~133 px del borde izquierdo, ~45 px del inferior)."""
-    import ctypes
-    import time as _t
-    import win32gui
-    from tools.windows import _find_window, focus_hwnd
-    h = _find_window("youtube music")
-    if not h:
-        return False
-    focus_hwnd(h)
-    _t.sleep(0.5)
-    r = win32gui.GetWindowRect(h)
-    u = ctypes.windll.user32
-    u.SetCursorPos(r[0] + 133, r[3] - 45)
-    _t.sleep(0.2)
-    u.mouse_event(2, 0, 0, 0, 0)
-    _t.sleep(0.06)
-    u.mouse_event(4, 0, 0, 0, 0)
-    return True
+    """Click en el ▶ del reproductor de YT Music (app o pestaña)."""
+    return control_musica("play")
 
 
 @kloom_tool("youtube_music", "Reproduce una playlist DEL USUARIO en YouTube Music y VERIFICA que suene (mide el audio del navegador). Para 'poné mi playlist X'. Si no la conozco, la respuesta te dice qué pedirle al usuario. NUNCA uses play_music ni open_url para playlists.", {"nombre": str})
@@ -225,7 +276,9 @@ async def youtube_music(args):
     for guardado, pid in lisas.items():
         if nombre in guardado or guardado in nombre:
             await asyncio.to_thread(_parar_actual)
-            _open(f"https://music.youtube.com/watch?list={pid}")
+            await asyncio.to_thread(
+                _abrir_app_musica,
+                f"https://music.youtube.com/watch?list={pid}")
             await asyncio.sleep(7)   # que cargue el reproductor
             if await asyncio.to_thread(_audio_navegador) > 0.01:
                 _avisar_musica()
@@ -281,7 +334,9 @@ async def play_on_ytmusic(args):
     vid = m.group(1)
     await asyncio.to_thread(_parar_actual)
     # watch con radio (&list=RDAMVM...): sigue con temas parecidos
-    _open(f"https://music.youtube.com/watch?v={vid}&list=RDAMVM{vid}")
+    await asyncio.to_thread(
+        _abrir_app_musica,
+        f"https://music.youtube.com/watch?v={vid}&list=RDAMVM{vid}")
     await asyncio.sleep(7)
     if await asyncio.to_thread(_audio_navegador) > 0.01:
         _avisar_musica()
