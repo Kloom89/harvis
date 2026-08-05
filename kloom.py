@@ -344,6 +344,21 @@ async def main():
     huella = Huella.cargar(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "dataset", "enroll"))
 
+    # Nombres de las playlists del usuario como hotwords de Whisper:
+    # "nightcore" dictado no puede volver como "ponen el coro".
+    try:
+        import json as _json
+        _pls = _json.load(open(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "playlists_ytmusic.json"), encoding="utf-8"))
+        if _pls:
+            _scfg = cfg.setdefault("stt", {})
+            _scfg["hotwords"] = ", ".join(
+                [_scfg.get("hotwords", "").strip(", ")] + list(_pls))
+            log.info("hotwords + playlists: %s", ", ".join(_pls))
+    except Exception:
+        pass
+
     print("Cargando Whisper large-v3 en GPU...", flush=True)
     stt = stt_mod.Stt(cfg)
     await asyncio.to_thread(stt.warm_up)
