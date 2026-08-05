@@ -123,7 +123,8 @@ body:not(.expanded) { background: #0b2134; }
 
 .idle #orb { animation: breathg 3.2s ease-in-out infinite; }
 @keyframes breathg {
-  50% { box-shadow: 0 0 4px rgba(53, 214, 255, .12); } }
+  50% { transform: scale(1.05);
+        box-shadow: 0 0 13px 3px rgba(53, 214, 255, .55); } }
 
 .armed #orb { box-shadow: 0 0 14px 2px rgba(53, 214, 255, .6); }
 .armed #orb::before { border-color: var(--cyan);
