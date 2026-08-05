@@ -63,6 +63,10 @@ class CerebroClaude:
             disallowed_tools=["Bash", "Write", "Edit",
                               "WebSearch", "WebFetch", "Task", "TodoWrite"],
             permission_mode="bypassPermissions",
+            # HARVIS no hereda la configuración de Claude Code: los plugins,
+            # skills y hooks del usuario son de SU consola, y acá solo meten
+            # ruido (un hook de arranque terminó anunciándose por voz).
+            setting_sources=[],
             max_turns=12,
             # deltas de texto en vivo: la boca habla mientras genera
             include_partial_messages=True,
