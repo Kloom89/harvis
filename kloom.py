@@ -106,9 +106,11 @@ MUSICA_DIRECTAS = [
                 r"|^(pasala|salta(la)?|otra)( cancion| tema)?$"), "next"),
     (re.compile(r"\banterior\b|\bprevia\b|^volve una$"), "previous"),
     (re.compile(r"sub\w+ (el )?volumen|volumen (mas )?arriba"
-                r"|^mas fuerte$"), "volume_up"),
+                r"|^(mas fuerte|subile|mas volumen|a todo volumen)$"),
+     "volume_up"),
     (re.compile(r"baj\w+ (el )?volumen|volumen (mas )?abajo"
-                r"|^mas bajo$"), "volume_down"),
+                r"|^(mas bajo|bajale|menos volumen|mas despacio)$"),
+     "volume_down"),
 ]
 # Estas van al cerebro (necesitan tools): "poné tal tema", "cambiá de
 # playlist". Ancladas al inicio: "se pone triste"/"todo cambia" son letra.
