@@ -115,9 +115,13 @@ MUSICA_DIRECTAS = [
      "volume_down"),
 ]
 # Estas van al cerebro (necesitan tools): "poné tal tema", "cambiá de
-# playlist". Ancladas al inicio: "se pone triste"/"todo cambia" son letra.
+# playlist", "podés poner X". Ancladas al inicio: "se pone triste"/"todo
+# cambia" son letra y no deben pasar.
 MUSICA_CEREBRO_RE = re.compile(
-    r"^(pone|poneme|cambia|cambiame|reproduci)\b|\bplaylist\b|\blista de\b")
+    r"^(pone|poneme|cambia|cambiame|reproduci)"
+    r"|^(podes|puedes|podrias|me podes|me puedes)\b.{0,12}"
+    r"\b(poner|cambiar|reproducir)\b"
+    r"|\bplaylist\b|\blista de\b")
 
 ENTER_CHAT_RE = EXIT_CHAT_RE = PRIVACY_RE = None
 ENTER_REDACTOR_RE = EXIT_REDACTOR_RE = ENTER_COACH_RE = RESET_RE = None
@@ -878,7 +882,11 @@ async def main():
         comando_musica = None
         if music_mode and not typed:
             st_m = sin_tildes(text.lower()).strip(".!?¿¡, ")
-            if match_wake(text, cfg) is not None:
+            if (time.monotonic() - len(audio) / 16000
+                    < awaiting_command_until):
+                pass  # ventana post-"¿Señor?": el comando pasa ENTERO,
+                      # dictado con la música ya baja (ducking)
+            elif match_wake(text, cfg) is not None:
                 pass          # "Harvis..." explícito: sigue el flujo normal
             elif len(text.split()) > 8:
                 continue      # frase larga = letra de canción

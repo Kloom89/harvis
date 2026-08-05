@@ -31,6 +31,9 @@ COMANDOS = [
     ("bajá el volumen", "volume_down"), ("más bajo", "volume_down"),
     ("bajale", "volume_down"), ("menos volumen", "volume_down"),
     ("poné mi playlist cumbia", "cerebro"),
+    ("puedes poner Versuit", "cerebro"),
+    ("podés poner bersuit vergarabat", "cerebro"),
+    ("me podés cambiar la música", "cerebro"),
     ("cambiá a la playlist goodvibes", "cerebro"),
     ("poneme el tema de soda stereo", "cerebro"),
     ("reproducí play it", "cerebro"),
@@ -49,6 +52,9 @@ LETRAS = [
     "vamos a bailar toda la noche",
     "gracias por venir",
     "dame una señal",
+    "me pone triste tu mirada",
+    "puedes ver que ya no estoy",
+    "pasa el tiempo y no te olvido",
 ]
 
 fallas = 0
