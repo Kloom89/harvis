@@ -17,8 +17,7 @@ try:
 except Exception:
     AVATAR_URI = ""
 
-# --- Banner de apps de KloomStudio: la propaganda de la casa. Logos chicos
-# embebidos en base64 (assets/promos/), rota cada 15 s, clic abre la web.
+# --- Banner de apps de KloomStudio (mismo que la versión open source).
 _PROMOS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                            "assets", "promos")
 # (slug, nombre, tagline, CTA, color de acento, url)
@@ -50,7 +49,7 @@ def _promos_json() -> str:
                     "cta": cta, "color": color, "url": url})
     return json.dumps(out)
 
-ORB = (96, 96)
+ORB = (82, 82)
 PANEL = (380, 600)
 MARGIN = 16
 
@@ -72,6 +71,17 @@ def _pantalla():
     u = ctypes.windll.user32
     return u.GetSystemMetrics(0), u.GetSystemMetrics(1)
 
+
+def _escala():
+    """Factor de escala de Windows (125% → 1.25). La ventana se crea en px
+    físicos pero WebView2 renderiza el contenido escalado: sin multiplicar,
+    el orbe de 96 CSS px necesita 120 físicos y se ve cortado."""
+    import ctypes
+    try:
+        return ctypes.windll.user32.GetDpiForSystem() / 96.0
+    except Exception:
+        return 1.0
+
 HTML = """<!doctype html><html><head><meta charset="utf-8"><style>
 :root {
   --bg: #050b12; --panel: #0a1420; --line: #12283a;
@@ -86,9 +96,9 @@ html, body { background: var(--bg); height: 100%; overflow: hidden;
 /* ---------- orbe ---------- */
 #orb-wrap { position: fixed; inset: 0; display: flex; align-items: center;
   justify-content: center; cursor: pointer; }
-#orb { width: 72px; height: 72px; border-radius: 50%; position: relative;
+#orb { width: 68px; height: 68px; border-radius: 50%; position: relative;
   background: url(__AVATAR__) center/cover, #071a28;
-  box-shadow: 0 0 18px 3px rgba(53, 214, 255, .35);
+  box-shadow: 0 0 10px 2px rgba(53, 214, 255, .35);
   transition: box-shadow .4s ease, filter .4s ease; }
 #orb::before { content: ''; position: absolute; inset: -4px;
   border-radius: 50%; border: 2px solid transparent;
@@ -169,7 +179,9 @@ body.expanded.muted #mini-orb {
   color: var(--amber); }
 
 /* ---------- panel ---------- */
-#panel { display: none; height: 100%; flex-direction: column; }
+#panel { display: none; height: 100%; flex-direction: column;
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: 14px; overflow: hidden; }
 body.expanded #orb-wrap { display: none; }
 body.expanded #panel { display: flex; }
 
@@ -403,7 +415,7 @@ function enviar() {
   if (!i.value.trim()) return;
   pywebview.api.send_text(i.value.trim()); i.value = '';
 }
-// Apps de KloomStudio — la propaganda de la casa. Rota cada 15 s.
+// Banner de apps de KloomStudio — rota cada 15 s.
 const PROMOS = __PROMOS__;
 let PROMO_I = Math.floor(Math.random() * PROMOS.length);
 function rotarPromo() {
@@ -518,12 +530,74 @@ class Hud:
         self._pending: list[str] = []
 
     # ---------- API expuesta a JS (corre en thread del webview) ----------
+    def _ajustar_posicion(self):
+        """pywebview crea la ventana MÁS GRANDE que lo pedido (~17 px de
+        chrome invisible) y el orbe quedaba cortado por el borde de la
+        pantalla: se mide el rect real y se reposiciona exacto."""
+        import ctypes
+        try:
+            u = ctypes.windll.user32
+            hwnd = u.FindWindowW(None, "HARVIS")
+            if not hwnd:
+                return
+
+            class _R(ctypes.Structure):
+                _fields_ = [("l", ctypes.c_long), ("t", ctypes.c_long),
+                            ("r", ctypes.c_long), ("b", ctypes.c_long)]
+            r = _R()
+            u.GetWindowRect(hwnd, ctypes.byref(r))
+            w, h = r.r - r.l, r.b - r.t
+            ancho, alto = _pantalla()
+            u.SetWindowPos(hwnd, 0, ancho - w - MARGIN, alto - h - MARGIN,
+                           0, 0, 0x0001 | 0x0004)  # NOSIZE | NOZORDER
+        except Exception:
+            log.debug("ajuste de posición falló", exc_info=True)
+
+    def _hwnd(self):
+        import ctypes
+        return ctypes.windll.user32.FindWindowW(None, "HARVIS")
+
+    def _forma_orbe(self, activar: bool):
+        """Modo orbe = ventana CIRCULAR (SetWindowRgn): pywebview fuerza un
+        ancho mínimo de ~120 px y el rectángulo sobrante quedaba feo a los
+        costados. El panel expandido vuelve a rectángulo completo."""
+        import ctypes
+        try:
+            u, g = ctypes.windll.user32, ctypes.windll.gdi32
+            hwnd = self._hwnd()
+            if not hwnd:
+                return
+            if not activar:
+                u.SetWindowRgn(hwnd, 0, True)
+                return
+
+            class _R(ctypes.Structure):
+                _fields_ = [("l", ctypes.c_long), ("t", ctypes.c_long),
+                            ("r", ctypes.c_long), ("b", ctypes.c_long)]
+            r = _R()
+            u.GetWindowRect(hwnd, ctypes.byref(r))
+            w, h = r.r - r.l, r.b - r.t
+            d = min(w, h)
+            x0, y0 = (w - d) // 2, (h - d) // 2
+            u.SetWindowRgn(hwnd, g.CreateEllipticRgn(x0, y0, x0 + d,
+                                                     y0 + d), True)
+        except Exception:
+            log.debug("forma del orbe falló", exc_info=True)
+
     def toggle(self):
         self.expanded = not self.expanded
-        w, h = PANEL if self.expanded else ORB
+        esc = _escala()
+        w, h = [int(v * esc) for v in (PANEL if self.expanded else ORB)]
         ancho, alto = _pantalla()
+        self._forma_orbe(False)
         self.window.resize(w, h)
         self.window.move(ancho - w - MARGIN, alto - h - MARGIN)
+
+        def _acomodar():
+            self._ajustar_posicion()
+            if not self.expanded:
+                self._forma_orbe(True)
+        threading.Timer(0.2, _acomodar).start()
         self._js(f"hud.expanded({json.dumps(self.expanded)})")
 
     def send_text(self, text: str):
@@ -544,7 +618,7 @@ class Hud:
         return "ok"
 
     def abrir_url(self, url: str):
-        """Banner de apps de KloomStudio: solo https, nada raro."""
+        """Banner de apps: solo https, nada raro."""
         import webbrowser
         if isinstance(url, str) and url.startswith("https://"):
             webbrowser.open(url)
@@ -681,6 +755,8 @@ class Hud:
 
     def _js_flush(self):
         self._set_taskbar_icon()
+        self._ajustar_posicion()
+        self._forma_orbe(True)
         self.window.expose(self.toggle, self.send_text, self.switch_brain,
                            self.get_timers, self.toggle_mic,
                            self.get_skills_data, self.save_comandos,
@@ -714,12 +790,15 @@ def serve_main_thread(timeout: float = 60):
         threading.Event().wait()          # mantener vivo el proceso
         return
     ancho, alto = _pantalla()
+    esc = _escala()
+    w, h = int(ORB[0] * esc), int(ORB[1] * esc)
     hud.window = webview.create_window(
         "HARVIS", html=HTML.replace("__AVATAR__", AVATAR_URI)
                           .replace("__PROMOS__", _promos_json()),
         frameless=True, easy_drag=True,
-        on_top=True, width=ORB[0], height=ORB[1],
-        x=ancho - ORB[0] - MARGIN, y=alto - ORB[1] - MARGIN,
+        on_top=True, width=w, height=h,
+        min_size=(ORB[0], ORB[1]),  # el default es (200,100) y pisa al orbe
+        x=ancho - w - MARGIN, y=alto - h - MARGIN,
         background_color="#050b12")
     hud.window.events.loaded += hud._js_flush
     webview.start(gui="edgechromium", private_mode=True)
