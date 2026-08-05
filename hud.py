@@ -178,9 +178,6 @@ h1:hover #marca { text-decoration: underline; }
   background: none; cursor: pointer; }
 #skills-btn:hover, body.skills #skills-btn { color: var(--cyan);
   border-color: var(--cyan-dim); }
-#brain { font-size: 11px; letter-spacing: 1px; color: var(--muted);
-  border: 1px solid var(--line); border-radius: 20px; padding: 3px 10px;
-  text-transform: uppercase; }
 
 /* ---------- vista skills ---------- */
 #skills-view { display: none; flex: 1; overflow-y: auto; padding: 10px 14px;
@@ -271,7 +268,6 @@ body.skills #entrada { display: none !important; }
     <div id="mini-orb" onclick="pywebview.api.toggle()" title="Achicar"></div>
     <h1 onclick="pywebview.api.abrir_web()" title="KloomStudio.com.ar"><span id="app-name">HARVIS</span><span id="marca">by KloomStudio.com.ar</span></h1>
     <button id="skills-btn" onclick="toggleSkills()">SKILLS</button>
-    <span id="brain">–</span>
   </header>
   <div id="estado-line">esperando «Harvis…»</div>
   <div id="skills-view"></div>
@@ -318,6 +314,7 @@ const ESTADOS = {
   muted: () => 'micrófono APAGADO — tocá 🎤 para prender',
 };
 let ESTADO_ACTUAL = 'idle';
+let BRAIN_ACTUAL = '';
 const hud = {
   state(s) {
     const b = document.body;
@@ -353,7 +350,7 @@ const hud = {
   reply(t) { addMsg('harvis', t); },
   aviso(t) { addMsg('harvis aviso', t); },
   brain(b) {
-    document.getElementById('brain').textContent = b;
+    BRAIN_ACTUAL = b;
     const s = document.getElementById('brain-sel');
     if (s) s.value = b;
   },
@@ -366,7 +363,7 @@ const hud = {
       o.value = b; o.textContent = b; s.appendChild(o); });
     s.onchange = () => pywebview.api.switch_brain(s.value);
     c.appendChild(s);
-    s.value = document.getElementById('brain').textContent || list[0];
+    s.value = BRAIN_ACTUAL || list[0];
   },
   expanded(on) { document.body.classList.toggle('expanded', on); },
   timers(list) {
