@@ -601,6 +601,39 @@ async def main():
     redactor_mode = False          # anota todo sin cerebro (skill redactor)
     coach_mode = False             # charla + prompt de coach (skill coach)
     music_mode = False             # solo órdenes de música; la letra se ignora
+
+    async def vigia_musica():
+        """Música/video sonando en el navegador o un reproductor → MODO
+        MÚSICA automático (aunque la haya puesto el usuario a mano);
+        ~15 s de silencio → modo normal solo."""
+        nonlocal music_mode
+        son = sil = 0
+        while True:
+            await asyncio.sleep(5)
+            try:
+                if privacy or chat_mode or coach_mode or redactor_mode:
+                    son = sil = 0
+                    continue
+                pico = await asyncio.to_thread(browser._audio_navegador)
+                if pico > 0.02:
+                    son, sil = son + 1, 0
+                    if not music_mode and son >= 2:
+                        music_mode = True
+                        hud.actividad("♪ modo música automático — pausa, "
+                                      "siguiente… o «Harvis, …»")
+                        log.info("modo música AUTO ON (pico %.2f)", pico)
+                        print("♪ modo música AUTO", flush=True)
+                elif pico >= 0:
+                    sil, son = sil + 1, 0
+                    if music_mode and sil >= 3:
+                        music_mode = False
+                        hud.set_state("idle")
+                        log.info("modo música AUTO OFF (silencio)")
+                        print("♪ modo música OFF (silencio)", flush=True)
+            except Exception:
+                log.debug("vigía música falló", exc_info=True)
+
+    asyncio.create_task(vigia_musica())
     # El coach charla mejor en otro modelo (Groq/Llama 70B, probado por
     # el usuario): cerebro aparte SIN tools, creado recién al entrar al modo.
     # El principal ni se entera; el hilo del coach persiste entre sesiones.

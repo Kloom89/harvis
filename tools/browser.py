@@ -102,7 +102,8 @@ def _playlists() -> dict:
 
 
 _NAVEGADORES = {"opera.exe", "opera_gx.exe", "chrome.exe", "msedge.exe",
-                "firefox.exe", "brave.exe", "vivaldi.exe"}
+                "firefox.exe", "brave.exe", "vivaldi.exe",
+                "spotify.exe", "vlc.exe", "wmplayer.exe", "music.ui.exe"}
 
 
 def _audio_navegador() -> float:
