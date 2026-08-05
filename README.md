@@ -6,7 +6,9 @@
 <p align="center"><b>An open, hackable, voice-first AI butler for your Windows PC</b><br>
   <img width="159" height="149" alt="image" src="https://github.com/user-attachments/assets/2fbd9d05-6a7d-4db3-bb30-e63ab44984ef" />
 
-by <a href="https://kloomstudio.com.ar">KloomStudio.com.ar</a></p>
+by KloomStudio.com.ar</a></p>
+
+<a href="https://kloomstudio.com.ar">
 
 ---
 
