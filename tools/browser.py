@@ -265,12 +265,14 @@ def control_musica(accion: str) -> bool:
 
 def _parar_actual():
     """Si YA hay música sonando, la pausa antes de poner otra cosa —
-    jamás dos cosas sonando a la vez."""
+    jamás dos cosas sonando a la vez. Primero el botón de pausa de la
+    ventana de música (certero); tecla multimedia como fallback."""
     import time as _t
     try:
         if _audio_navegador() > 0.01:
-            from teclado import media
-            media("play")   # toggle sobre la sesión activa = pausa
+            if not control_musica("pause"):
+                from teclado import media
+                media("play")   # toggle global, último recurso
             _t.sleep(0.8)
     except Exception:
         pass
