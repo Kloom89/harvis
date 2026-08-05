@@ -469,6 +469,17 @@ async def main():
     # Los cerebros a veces meten markdown igual: se pela antes de hablar y
     # de mostrar ("**Hola**" leído como "asterisco asterisco Hola" = ridículo).
     _MARKDOWN = re.compile(r"[*`#]+|^\s*[-•]\s+", re.MULTILINE)
+    # Máximo UN "señor" por respuesta (regla de la casa): el primero queda,
+    # los demás se podan conservando la puntuación.
+    _SENOR_RE = re.compile(r"\s*,?\s*\bse[ñn]or\b([.!?…])?", re.IGNORECASE)
+
+    def podar_senores(texto: str, estado: dict) -> str:
+        def _sub(m):
+            estado["senores"] = estado.get("senores", 0) + 1
+            if estado["senores"] <= 1:
+                return m.group(0)
+            return m.group(1) or ""
+        return _SENOR_RE.sub(_sub, texto)
 
     async def responder_en_vivo(gen) -> str:
         """Consume el stream del cerebro hablando cada oración apenas está
@@ -480,6 +491,7 @@ async def main():
             pendiente = ""
             async for chunk in gen:
                 chunk = _MARKDOWN.sub("", chunk)
+                chunk = podar_senores(chunk, acum)
                 # chunks = deltas de tokens (traen su propio espaciado) o
                 # respuestas enteras (jarvis) — concatenar tal cual
                 # separador SOLO en fronteras de bloque (fin de oración →
@@ -1077,7 +1089,7 @@ async def main():
             except Exception:
                 log.exception("cerebro reventó (tg)")
                 reply = "Se me rompió algo procesando eso, señor."
-            reply = _MARKDOWN.sub("", reply)
+            reply = podar_senores(_MARKDOWN.sub("", reply), {})
             hud.reply(reply)
             hud.set_state("idle")
             memoria.append_historial(command, reply)
@@ -1209,6 +1221,7 @@ async def main():
             if t is not None and not t.done():
                 t.cancel()
         if turno_mudo:
+            reply = podar_senores(_MARKDOWN.sub("", reply), {})
             hud.reply("✔ " + reply)
         # el texto ya se fue streameando al HUD oración por oración
         hud.reply_end()
