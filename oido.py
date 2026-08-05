@@ -70,19 +70,33 @@ class Oido:
     def _emit(self, kind: str, audio: np.ndarray):
         self.loop.call_soon_threadsafe(self.queue.put_nowait, (kind, audio))
 
+    _cb_error_ts = 0.0
+
     def _cb(self, indata, _frames, _time, _status):
         self._last_cb = time.monotonic()   # latido: el stream sigue vivo
         if self._muted:
             return
-        frame = indata[:, 0].copy()
-        if self.eco is not None:
-            frame = self.eco.procesar(frame)
-        with self._lock:
-            self._buf = np.concatenate([self._buf, frame])
+        try:
+            frame = indata[:, 0].copy()
+            if self.eco is not None:
+                frame = self.eco.procesar(frame)
+            with self._lock:
+                self._buf = np.concatenate([self._buf, frame])
+        except MemoryError:
+            # apretón de RAM del sistema: soltar ESTE frame y seguir vivo
+            # (sin esto, la excepción en el callback CFFI abre un popup y
+            # el buffer queda en cualquier estado).
+            if time.monotonic() - self._cb_error_ts > 60:
+                self._cb_error_ts = time.monotonic()
+                log.warning("sin memoria para el buffer del mic; "
+                            "descarto frames hasta que afloje")
+            with self._lock:
+                self._buf = np.zeros(0, dtype=np.float32)
+            return
             # cap: pre-roll + frase máxima
             cap = int(SAMPLE_RATE * (self.max_utterance + _PRE_ROLL + 1))
             if self._buf.size > cap and not self._ptt_down:
-                self._buf = self._buf[-cap:]
+                self._buf = self._buf[-cap:].copy()  # soltar el array viejo
 
     def _on_ptt_press(self):
         if self._ptt_down or self._muted:
