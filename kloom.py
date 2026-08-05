@@ -1245,6 +1245,7 @@ async def main():
             music_mode = True
             chat_mode = coach_mode = False
             oido.unmute()
+            hud.set_state("idle")   # apagar el anillo de "pensando"
             hud.actividad("♪ modo música: pausa, siguiente, poné tal "
                           "tema… «modo normal» para salir")
             log.info("modo música ON")
@@ -1260,6 +1261,7 @@ async def main():
         elif music_mode:
             # seguimos en modo música: nada de ventana de repregunta ni
             # "te escucho" — el modo ya escucha órdenes de música siempre.
+            hud.set_state("idle")   # sin esto el anillo "pensando" queda
             hud.actividad("♪ modo música — pausa, siguiente, poné tal "
                           "tema… «modo normal» para salir")
         elif followup > 0:
