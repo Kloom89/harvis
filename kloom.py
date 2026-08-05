@@ -103,7 +103,9 @@ MUSICA_DIRECTAS = [
     (re.compile(r"^(dale )?play$|\breanuda\w*\b|^segui$"
                 r"|\bcontinua la (musica|cancion)\b"), "play"),
     (re.compile(r"\bsiguiente\b|\bsaltea\w*\b|\bproxima\b"
-                r"|^(pasala|salta(la)?|otra)( cancion| tema)?$"), "next"),
+                r"|^(pasala|salta(la)?|otra)( cancion| tema)?$"
+                r"|^(pasa|cambia)( de)? ?(tema|cancion|musica)$"
+                r"|^(el|la) que sigue$"), "next"),
     (re.compile(r"\banterior\b|\bprevia\b|^volve una$"), "previous"),
     (re.compile(r"sub\w+ (el )?volumen|volumen (mas )?arriba"
                 r"|^(mas fuerte|subile|mas volumen|a todo volumen)$"),
