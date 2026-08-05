@@ -4,6 +4,8 @@
 
 <h1 align="center">HARVIS</h1>
 <p align="center"><b>An open, hackable, voice-first AI butler for your Windows PC</b><br>
+  <img width="159" height="149" alt="image" src="https://github.com/user-attachments/assets/2fbd9d05-6a7d-4db3-bb30-e63ab44984ef" />
+
 by <a href="https://kloomstudio.com.ar">KloomStudio.com.ar</a></p>
 
 ---
@@ -11,6 +13,9 @@ by <a href="https://kloomstudio.com.ar">KloomStudio.com.ar</a></p>
 HARVIS is a JARVIS-style voice assistant that actually **does things on your PC**: opens apps, reads your Microsoft Teams, drafts WhatsApp messages by contact name, sets timers, takes a screenshot and *sees* it, checks your homelab over SSH, and talks back with natural streaming TTS — all hands-free, powered by the LLM of your choice.
 
 *(The assistant speaks Spanish out of the box — prompts and voice are fully configurable in `config.yaml`.)*
+
+<img width="404" height="667" alt="image" src="https://github.com/user-attachments/assets/00097a1b-0b15-4804-9670-874ee9bb0b05" />
+
 
 ## Features
 
