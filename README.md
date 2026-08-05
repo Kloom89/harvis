@@ -45,12 +45,25 @@ python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
 ```
 
-API keys go in **environment variables**, never in files:
+### Bring your own keys
 
-```bat
-setx GROQ_API_KEY gsk_...
-setx TELEGRAM_BOT_TOKEN 123:abc   (optional)
-```
+HARVIS ships with **no credentials** — every brain runs on *your* account.
+Keys go in **environment variables, never in files** (the config only names
+the variable, e.g. `api_key_env: GROQ_API_KEY`):
+
+| Brain | Get a key | Set it |
+|---|---|---|
+| **Claude** (default) | [Claude Code / Agent SDK](https://claude.com/claude-code) — log in once with your own subscription or API key | handled by the SDK login |
+| **Groq** (free tier, fast) | [console.groq.com/keys](https://console.groq.com/keys) | `setx GROQ_API_KEY gsk_...` |
+| **Ollama** (local, free) | [ollama.com](https://ollama.com) — no key at all | — |
+| **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) | `setx OPENAI_API_KEY sk-...` |
+| **Gemini** | [aistudio.google.com](https://aistudio.google.com/apikey) | `setx GEMINI_API_KEY ...` |
+| **Kimi** | [platform.moonshot.ai](https://platform.moonshot.ai) | `setx MOONSHOT_API_KEY ...` |
+| Telegram (optional) | [@BotFather](https://t.me/BotFather) | `setx TELEGRAM_BOT_TOKEN 123:abc` |
+
+You only need **one** brain to start — Groq's free tier or local Ollama are
+the zero-cost paths. A brain without its key simply fails to connect and
+HARVIS tells you; the rest keep working.
 
 Run:
 
