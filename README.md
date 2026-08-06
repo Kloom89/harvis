@@ -14,6 +14,7 @@
   <img alt="Python" src="https://img.shields.io/badge/Python-3.12%2B-35d6ff?style=flat-square">
   <img alt="Offline wake word" src="https://img.shields.io/badge/wake%20word-100%25%20local-3dd68c?style=flat-square">
   <img alt="Brains" src="https://img.shields.io/badge/brains-Claude%20·%20Groq%20·%20Ollama%20·%20OpenAI%20·%20Gemini-35d6ff?style=flat-square">
+  <a href="https://t.me/+0tInup5bmYBiZjNh"><img alt="Telegram" src="https://img.shields.io/badge/community-Telegram-35d6ff?style=flat-square&logo=telegram&logoColor=white"></a>
 </p>
 
 <p align="center">
@@ -190,6 +191,19 @@ async def WATCHER(avisar, cfg):     # optional: background loop
 Install it from the HUD (**⚙ SKILLS → ＋ Install skill**) — it hot-reloads, no
 restart. **Pull requests with new skills are very welcome**; that's the whole
 point of publishing this.
+
+## Community
+
+Questions, a skill you built, a bug you can't pin down, or just showing what you
+made it do — there's a Telegram group:
+
+<p align="center">
+  <a href="https://t.me/+0tInup5bmYBiZjNh"><b>📣 Join KloomCommunity on Telegram</b></a>
+</p>
+
+Bugs and feature requests are better as
+[issues](https://github.com/Kloom89/harvis/issues) — they stay searchable for
+whoever hits the same thing next.
 
 ## Under the hood
 

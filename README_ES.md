@@ -15,6 +15,7 @@
   <img alt="Python" src="https://img.shields.io/badge/Python-3.12%2B-35d6ff?style=flat-square">
   <img alt="Wake word local" src="https://img.shields.io/badge/wake%20word-100%25%20local-3dd68c?style=flat-square">
   <img alt="Cerebros" src="https://img.shields.io/badge/cerebros-Claude%20·%20Groq%20·%20Ollama%20·%20OpenAI%20·%20Gemini-35d6ff?style=flat-square">
+  <a href="https://t.me/+0tInup5bmYBiZjNh"><img alt="Telegram" src="https://img.shields.io/badge/comunidad-Telegram-35d6ff?style=flat-square&logo=telegram&logoColor=white"></a>
 </p>
 
 <p align="center">
@@ -198,6 +199,19 @@ async def WATCHER(avisar, cfg):     # opcional: loop de fondo
 Se instala desde el HUD (**⚙ SKILLS → ＋ Instalar skill**) y se carga en
 caliente, sin reiniciar. **Los pull requests con skills nuevas son más que
 bienvenidos**; para eso está publicado esto.
+
+## Comunidad
+
+Dudas, una skill que armaste, un bug que no podés agarrar, o simplemente
+mostrar para qué lo usás: hay un grupo de Telegram.
+
+<p align="center">
+  <a href="https://t.me/+0tInup5bmYBiZjNh"><b>📣 Sumate a KloomCommunity en Telegram</b></a>
+</p>
+
+Los bugs y los pedidos de features conviene dejarlos como
+[issues](https://github.com/Kloom89/harvis/issues): quedan buscables para el
+que se tropiece con lo mismo después.
 
 ## Cómo está hecho por dentro
 
