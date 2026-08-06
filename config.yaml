@@ -72,7 +72,13 @@ stt:
       replace: Harvis
 
 briefing:
-  hora: "09:00"   # buen día con clima + pendientes + Teams (skill briefing_matinal)
+  # Buen día con clima + pendientes + Teams (skill briefing_matinal).
+  # Se edita en vivo desde el HUD → SKILLS; lo guardado ahí (comandos.yaml)
+  # pisa estos valores.
+  activo: false
+  hora: "09:00"
+  dias: [0, 1, 2, 3, 4]   # 0=lunes … 6=domingo
+  saltar_feriados: true   # feriados nacionales AR: no habla
 
 aec:
   # Cancelación de eco (WebRTC): al mic se le resta lo que suena por los

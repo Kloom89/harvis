@@ -172,7 +172,7 @@ def aplicar_comandos(cfg: dict):
 def load_config(path="config.yaml") -> dict:
     with open(path, encoding="utf-8") as f:
         cfg = yaml.safe_load(f) or {}
-    # overrides editables desde el HUD (comandos + wake word/aliases)
+    # overrides editables desde el HUD (comandos, wake word/aliases, briefing)
     try:
         if os.path.exists(COMANDOS_FILE):
             ov = yaml.safe_load(open(COMANDOS_FILE, encoding="utf-8")) or {}
@@ -185,6 +185,8 @@ def load_config(path="config.yaml") -> dict:
                 w = str(ov["wake"].get("word", ""))
                 if w and not w.lower().startswith("harv"):
                     cfg["wake"]["pattern"] = None
+            if ov.get("briefing"):
+                cfg.setdefault("briefing", {}).update(ov["briefing"])
     except Exception:
         log.exception("comandos.yaml ilegible, sigo con defaults")
     aplicar_comandos(cfg)
@@ -219,6 +221,21 @@ def guardar_comandos(cfg: dict, payload: dict) -> str:
         cfg.setdefault("wake", {}).update(ov["wake"])
         if not ov["wake"]["word"].startswith("harv"):
             cfg["wake"]["pattern"] = None
+    if payload.get("briefing"):
+        b = payload["briefing"]
+        dias = []
+        for d in (b.get("dias") or []):
+            try:
+                if 0 <= int(d) <= 6:
+                    dias.append(int(d))
+            except (TypeError, ValueError):
+                pass
+        ov["briefing"] = {"activo": bool(b.get("activo")),
+                          "hora": str(b.get("hora") or "09:00"),
+                          "dias": sorted(set(dias)),
+                          "saltar_feriados": bool(b.get("saltar_feriados"))}
+        # la skill relee cfg["briefing"] en cada vuelta: aplica sin reiniciar
+        cfg.setdefault("briefing", {}).update(ov["briefing"])
     with open(COMANDOS_FILE, "w", encoding="utf-8") as f:
         yaml.safe_dump(ov, f, allow_unicode=True, sort_keys=False)
     aplicar_comandos(cfg)
@@ -455,6 +472,7 @@ async def main():
             return {"wake": {"word": cfg.get("wake", {}).get("word", ""),
                              "aliases": cfg.get("wake", {}).get("aliases", [])},
                     "comandos": cfg.get("comandos", {}),
+                    "briefing": cfg.get("briefing", {}),
                     "skills": skills_info}
 
         hud = Hud(cfg, loop,

@@ -287,6 +287,19 @@ body.skills #entrada { display: none !important; }
   font-family: inherit; resize: vertical; }
 #skills-view input:focus, #skills-view textarea:focus {
   border-color: var(--cyan-dim); }
+/* tildes: el input no se estira como los de texto ni el label los tira abajo
+   (los selectores llevan #skills-view a propósito: si no, pierden por
+   especificidad contra las reglas de arriba y el tilde sale centrado) */
+#skills-view input[type="checkbox"] { width: auto; flex: none; margin: 0;
+  accent-color: var(--cyan); cursor: pointer; }
+#skills-view label.sk-check { display: flex; align-items: center; gap: 7px;
+  margin: 10px 0; color: var(--text); cursor: pointer; }
+/* los 7 días entran en UNA fila en el panel de 380px */
+#skills-view .sk-dias { display: flex; justify-content: space-between;
+  gap: 4px; margin: 3px 0 4px; }
+#skills-view .sk-dias label { display: flex; align-items: center; gap: 3px;
+  margin: 0; color: var(--text); cursor: pointer; font-size: 11.5px; }
+#skills-view #sk-brief-hora { width: 110px; }
 .sk-item { border: 1px solid var(--line); border-radius: 10px;
   padding: 8px 10px; margin: 6px 0; }
 .sk-item b { color: var(--text); }
@@ -375,7 +388,7 @@ body.error #estado-line::before { background: #ff5c5c; }
 #send-btn:hover { box-shadow: 0 0 12px rgba(53, 214, 255, .45); }
 </style></head><body class="idle">
 
-<div id="orb-wrap">
+<div id="orb-wrap" class="pywebview-drag-region">
   <div id="orb" title="Abrir panel" onclick="pywebview.api.toggle()"></div>
   <button id="orb-mute" title="Privacidad: apagar/prender el micrófono"
           onclick="pywebview.api.toggle_mic()"><svg class="ic"
@@ -386,7 +399,7 @@ body.error #estado-line::before { background: #ff5c5c; }
 </div>
 
 <div id="panel">
-  <header>
+  <header class="pywebview-drag-region">
     <div id="mini-orb" onclick="pywebview.api.toggle()" title="Achicar"></div>
     <h1 onclick="pywebview.api.abrir_web()" title="KloomStudio.com.ar"><span id="app-name">HARVIS</span><span id="marca">by KloomStudio.com.ar</span></h1>
     <button id="skills-btn" onclick="toggleSkills()">SKILLS</button>
@@ -564,6 +577,23 @@ async function toggleSkills() {
     h += `<label>${titulo}</label>` +
       `<textarea id="sk-${k}" rows="2">${(d.comandos[k] || []).join(', ')}</textarea>`;
   }
+  const TIP_BRIEF = 'El parte de la mañana: clima, pendientes y Teams sin ' +
+    'leer. Viene apagado — prendelo, elegí a qué hora y qué días. Con ' +
+    '"feriados no" se calla los feriados nacionales de Argentina.';
+  const br = d.briefing || {};
+  const bd = br.dias || [0, 1, 2, 3, 4];
+  const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  h += `<h2>Briefing matinal <span class="ayuda" data-tip="${TIP_BRIEF}">?</span></h2>` +
+    `<label class="sk-check"><input type="checkbox" id="sk-brief-activo"` +
+    `${br.activo ? ' checked' : ''}><span>Activado</span></label>` +
+    '<label>Hora</label>' +
+    `<input type="time" id="sk-brief-hora" value="${br.hora || '09:00'}">` +
+    '<label>Días</label><div class="sk-dias">' +
+    DIAS.map((n, i) => `<label><input type="checkbox" class="sk-dia" ` +
+      `value="${i}"${bd.includes(i) ? ' checked' : ''}>${n}</label>`).join('') +
+    '</div>' +
+    `<label class="sk-check"><input type="checkbox" id="sk-brief-feriados"` +
+    `${br.saltar_feriados ? ' checked' : ''}><span>Feriados no</span></label>`;
   h += '<button id="sk-save" onclick="guardarSkills()">Guardar y aplicar</button>' +
     '<div id="sk-status"></div><h2>Skills instaladas</h2>';
   for (const s of (d.skills || [])) {
@@ -596,6 +626,12 @@ async function guardarSkills() {
     wake: { word: document.getElementById('sk-word').value.trim(),
             aliases: lista('sk-aliases') },
     comandos: {},
+    briefing: {
+      activo: document.getElementById('sk-brief-activo').checked,
+      hora: document.getElementById('sk-brief-hora').value || '09:00',
+      dias: [...document.querySelectorAll('.sk-dia:checked')].map(x => +x.value),
+      saltar_feriados: document.getElementById('sk-brief-feriados').checked,
+    },
   };
   for (const k of Object.keys(GRUPOS)) payload.comandos[k] = lista('sk-' + k);
   const r = await pywebview.api.save_comandos(JSON.stringify(payload));
@@ -880,7 +916,7 @@ def serve_main_thread(timeout: float = 300):
         "HARVIS", html=HTML.replace("__AVATAR__", AVATAR_URI)
                           .replace("__FONT__", FONT_URI)
                           .replace("__PROMOS__", _promos_json()),
-        frameless=True, easy_drag=True,
+        frameless=True, easy_drag=False,
         on_top=True, width=w, height=h,
         min_size=(ORB[0], ORB[1]),  # el default es (200,100) y pisa al orbe
         x=ancho - w - MARGIN, y=alto - h - MARGIN,

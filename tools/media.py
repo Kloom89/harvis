@@ -33,13 +33,31 @@ async def get_time(args):
             f"{now.hour:02d}:{now.minute:02d}")
 
 
-@kloom_tool("get_weather", "Clima actual de una ciudad (por defecto la local).", {"city": (str, "")})
+@kloom_tool("get_weather", "Clima actual y pronóstico de 3 días de una ciudad (por defecto la local).", {"city": (str, "")})
 async def get_weather(args):
+    import json
     city = args.get("city") or ""
     try:
-        url = f"https://wttr.in/{urllib.parse.quote(city)}?format=%C,+%t,+humedad+%h&lang=es"
-        with urllib.request.urlopen(url, timeout=6) as r:
-            return r.read().decode("utf-8")
+        url = f"https://wttr.in/{urllib.parse.quote(city)}?format=j1&lang=es"
+        with urllib.request.urlopen(url, timeout=8) as r:
+            data = json.loads(r.read().decode("utf-8"))
+
+        def desc(bloque):
+            return ((bloque.get("lang_es") or [{}])[0].get("value")
+                    or bloque["weatherDesc"][0]["value"]).strip()
+
+        cur = data["current_condition"][0]
+        out = [f"Ahora: {desc(cur)}, {cur['temp_C']} grados "
+               f"(sensación {cur['FeelsLikeC']}), humedad {cur['humidity']}%"]
+        dias = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+        for d in data["weather"][:3]:
+            fecha = datetime.date.fromisoformat(d["date"])
+            # bloque horario del mediodía como representativo del día
+            hh = d["hourly"][4] if len(d["hourly"]) > 4 else d["hourly"][0]
+            out.append(f"{dias[fecha.weekday()]} {fecha.day}: {desc(hh)}, "
+                       f"{d['mintempC']} a {d['maxtempC']} grados, "
+                       f"lluvia {hh['chanceofrain']}%")
+        return ". ".join(out)
     except Exception as e:
         return f"No pude consultar el clima: {e}"
 
