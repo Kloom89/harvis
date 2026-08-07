@@ -393,6 +393,14 @@ async def main():
                                 .get("window_title", "Claude"))
     browser.CDP_PORT = (cfg.get("tools", {}).get("browser", {})
                         .get("cdp_port", 9222))
+    _hl = cfg.get("tools", {}).get("homelab", {}) or {}
+    homelab.HOST = _hl.get("host", "") or ""
+    _vaults = _hl.get("vault") or []
+    if isinstance(_vaults, str):
+        _vaults = [_vaults]
+    homelab.VAULTS = [v.rstrip("/") for v in _vaults if v]
+    homelab.VAULT = homelab.VAULTS[0] if homelab.VAULTS else ""
+    homelab.HARVIS_DIR = f"{homelab.VAULT}/HARVIS" if homelab.VAULT else ""
     base_tools = (windows.TOOLS + claude_code.TOOLS + browser.TOOLS
                   + media.TOOLS + timers.TOOLS + proyectos.TOOLS
                   + memoria.TOOLS + homelab.TOOLS + codigo.TOOLS

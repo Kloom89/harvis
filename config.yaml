@@ -236,7 +236,9 @@ tools:
     # SSH de solo-lectura a tu servidor/homelab (con clave, sin password).
     # Vacío = tools de homelab y vault desactivadas.
     host: ""              # ej: usuario@192.168.1.50
-    vault: ""             # ej: /home/usuario/MiVault (notas Obsidian/md)
+    vault: ""             # ej: /home/usuario/MiVault (notas Obsidian/md).
+                          # Acepta una ruta o una lista de rutas (varios
+                          # vaults); las notas de HARVIS van al primero.
     disk_path: "/"        # disco que vigila la skill vigia_homelab
   proyectos:
     # Carpeta con archivos project_*.md (memoria de proyectos, p.ej. la de

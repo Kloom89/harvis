@@ -53,6 +53,7 @@ async def homelab_run(args):
 # Rutas ABSOLUTAS: '~' entre comillas simples no expande y termina creando
 # un directorio literal "~" (pasó en el primer test).
 VAULT = ""           # kloom.py lo setea desde config tools.homelab.vault
+VAULTS = []          # tools.homelab.vault acepta una ruta o una lista
 HARVIS_DIR = ""      # <vault>/HARVIS — la única carpeta donde puede escribir
 _NOTA_OK = re.compile(r"^[\w\-. áéíóúñÁÉÍÓÚÑ]{1,60}\.md$")
 
@@ -75,9 +76,10 @@ async def cerebro_search(args):
     t = args["termino"].strip().replace("'", "")
     if not t:
         return "Decime qué buscar."
+    roots = " ".join(VAULTS or [VAULT])
     try:
-        cmd = (f"grep -rlim 20 '{t}' {VAULT} --include='*.md' | head -12; "
-               f"echo ---; grep -rihm 12 '{t}' {VAULT} --include='*.md' "
+        cmd = (f"grep -rlim 20 '{t}' {roots} --include='*.md' | head -12; "
+               f"echo ---; grep -rihm 12 '{t}' {roots} --include='*.md' "
                f"| head -12")
         out = await _ssh(cmd)
         return out[:MAX_OUT] if out.strip("-\n ") else f"Nada sobre '{t}' en Cerebro."
@@ -93,7 +95,7 @@ async def cerebro_read(args):
     ruta = args["ruta"].strip().replace("'", "")
     if ".." in ruta or not ruta:
         return "Ruta inválida."
-    if not ruta.startswith(VAULT):
+    if not any(ruta.startswith(v) for v in (VAULTS or [VAULT])):
         ruta = f"{VAULT}/{ruta.lstrip('~/')}"
     try:
         out = await _ssh(f"cat '{ruta}'")
