@@ -62,5 +62,12 @@ for frase in PARECIDOS:
         print(f"  FALLA parecido {frase[:40]!r}: despierta sin huella")
         mal += 1
 
+# Sin huella (instalación nueva), las palabras ambiguas quedan apagadas
+# (parecidos=False no las matchea) pero el parecido por SIMILITUD sigue
+# vivo — las mejoras del wake viajan sin la voz de nadie.
+assert match_wake("Javier Milei anunció nuevas medidas económicas",
+                  cfg, parecidos=False) is None
+assert match_wake("Carguis", cfg, parecidos=False) == ""
+
 assert mal == 0
 print("test_wake parecidos OK ✓")

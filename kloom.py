@@ -293,7 +293,8 @@ def cargar_skills(cfg: dict):
     return tools, info, redactor_buffer, watchers
 
 
-def match_wake(text: str, cfg: dict, fuzzy: bool = True) -> str | None:
+def match_wake(text: str, cfg: dict, fuzzy: bool = True,
+               parecidos: bool = True) -> str | None:
     """Si la frase arranca con el wake word devuelve el comando (sin él);
     si no, None. '' = wake word solo, sin comando.
 
@@ -326,10 +327,10 @@ def match_wake(text: str, cfg: dict, fuzzy: bool = True) -> str | None:
         # wake word, a veces un nombre real en la tele): entran por acá
         # —camino por parecido— así el gate de huella exige que la voz
         # sea la del usuario antes de despertar.
-        parecidos = set(wcfg.get("parecidos") or [])
+        ambiguas = set(wcfg.get("parecidos") or []) if parecidos else set()
         for cand in re.finditer(r"[a-z]{4,9}", norm):
             w = cand.group()
-            if w in parecidos:
+            if w in ambiguas:
                 m = cand
                 break
             if w.startswith("ser"):   # servicio, servís
@@ -1105,10 +1106,20 @@ async def main():
                 # Matcheó por PARECIDO, no por el nombre: un tiktok que
                 # arranca con "Mari" mide 0.60 contra "harvis" y lo
                 # despertaba. Que lo confirme la voz o no vale.
-                if not (huella is not None and audio.size <= 16000 * 6
-                        and huella.match(audio,
-                                         margen=3.5 if music_mode else 0.0)):
-                    log.info("wake por parecido ignorado (no es su voz): %r",
+                if huella is not None:
+                    if not (audio.size <= 16000 * 6
+                            and huella.match(
+                                audio,
+                                margen=3.5 if music_mode else 0.0)):
+                        log.info("wake por parecido ignorado (no es su "
+                                 "voz): %r", text[:60])
+                        continue
+                elif match_wake(text, cfg, parecidos=False) is None:
+                    # Sin huella grabada (instalación nueva) no hay forma
+                    # de confirmar la voz: el parecido por similitud vale
+                    # igual, pero las palabras ambiguas de wake.parecidos
+                    # quedan apagadas hasta que exista el enroll.
+                    log.info("wake ambiguo ignorado (sin huella): %r",
                              text[:60])
                     continue
             if command and len(command.split()) <= 4 and all(
