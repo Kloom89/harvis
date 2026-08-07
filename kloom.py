@@ -322,8 +322,16 @@ def match_wake(text: str, cfg: dict, fuzzy: bool = True) -> str | None:
         corto = len(text.split()) <= int(wcfg.get("fuzzy_max_palabras", 3))
         umbral = float(wcfg.get("fuzzy_corto" if corto else "fuzzy_largo",
                                 0.50 if corto else 0.58))
+        # Palabras AMBIGUAS ("javier": a veces es Whisper masticando el
+        # wake word, a veces un nombre real en la tele): entran por acá
+        # —camino por parecido— así el gate de huella exige que la voz
+        # sea la del usuario antes de despertar.
+        parecidos = set(wcfg.get("parecidos") or [])
         for cand in re.finditer(r"[a-z]{4,9}", norm):
             w = cand.group()
+            if w in parecidos:
+                m = cand
+                break
             if w.startswith("ser"):   # servicio, servís
                 continue
             # -éis/-áis = vosotros (España): el usuario nunca lo usa — si suena,

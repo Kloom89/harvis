@@ -6,6 +6,7 @@ intentos del usuario = positivos). Correr tras cada sesión fallida:
   python wake_lab.py --barrido  # busca el umbral óptimo del fuzzy
 """
 import difflib
+import os
 import re
 import sys
 import unicodedata
@@ -36,8 +37,13 @@ POSITIVOS = [
 _PALABRAS_POS = {"javi", "harvey", "jarvis", "harris", "harvis", "jervis",
                  "hergis", "carguis", "charbis", "sharvis", "chervis"}
 
-NEGATIVOS = [l.rstrip("\n") for l in
-             open("corpus_oido.txt", encoding="utf-8") if l.strip()]
+# corpus_oido.txt = frases reales oídas por TU mic (se extrae de kloom.log,
+# líneas "oído:"); es personal y no viene en el repo — sin él, el lab corre
+# solo con los negativos de ejemplo.
+NEGATIVOS = []
+if os.path.exists("corpus_oido.txt"):
+    NEGATIVOS = [l.rstrip("\n") for l in
+                 open("corpus_oido.txt", encoding="utf-8") if l.strip()]
 NEGATIVOS = [n for n in NEGATIVOS if n not in POSITIVOS]
 NEGATIVOS += ["¿Habéis comprado un quistadillo en un estante de supermercado?",
               "¿Sabéis lo que pasó ayer?", "vosotros tenéis razón"]

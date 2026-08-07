@@ -20,7 +20,9 @@ wake:
   # <ataque /j/ o /ʃ/><vocal><r opcional><labial opcional><i|e><y|s opcional>.
   # Calibrado con wake_lab.py contra logs reales. Si cambiás el wake word
   # (botón SKILLS del HUD), el pattern se desactiva solo y queda el fuzzy.
-  pattern: '\b(?!ser)(?:[jhgyx]|ch|sh|ll)[aeo](?:r{1,2}|l)?[vbpfwl]?(?:i[sz]{0,2}|ey|ier)\b'
+  # (?!javier\b): nombre real común — "Javier Milei" en un noticiero de
+  # fondo matcheaba j-a-v-ier y lo despertaba. "javi"/"javis" siguen valiendo.
+  pattern: '\b(?!ser|javier\b)(?:[jhgyx]|ch|sh|ll)[aeo](?:r{1,2}|l)?[vbpfwl]?(?:i[sz]{0,2}|ey|ier)\b'
   # Cuántos caracteres iniciales del transcript se miran para el wake word.
   prefix_chars: 18
   # Si el regex no matchea, similitud fuzzy contra el wake word. El umbral
@@ -32,6 +34,10 @@ wake:
   # Variantes exactas que el fuzzy no alcanza: Whisper inventa una nueva →
   # se agrega acá, sin tocar código.
   aliases: [harry, jarbis, harbis]
+  # Palabras ambiguas: a veces son Whisper masticando el wake word y a veces
+  # un nombre real ("Javier Milei" en un noticiero lo despertó). Despiertan
+  # SOLO si la huella de voz confirma que habló el usuario.
+  parecidos: [javier]
   # Segundos que espera tu orden después de contestar "¿Señor?" (decís solo
   # el nombre y el comando va después). NO se abre al terminar un turno:
   # fuera de los modos, siempre hay que nombrarlo.
