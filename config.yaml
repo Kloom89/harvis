@@ -121,6 +121,10 @@ llm:
   providers:
     claude:
       driver: sdk               # claude-agent-sdk (suscripción o API)
+      # Login propio de HARVIS, independiente de la cuenta de la CLI.
+      # Se activa solo cuando exista .credentials.json ahí (una vez:
+      # CLAUDE_CONFIG_DIR=<esta carpeta> claude auth login).
+      config_dir: .claude-harvis
       # haiku responde 3-4x más rápido que sonnet y para comandos de voz
       # sobra; si extrañás la ironía fina subí a sonnet.
       model: haiku

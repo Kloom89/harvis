@@ -51,6 +51,16 @@ def crear_cerebro(cfg: dict, tools: list[Tool], brain: str | None = None):
 class CerebroClaude:
     def __init__(self, cfg: dict, pcfg: dict, tools: list[Tool]):
         lcfg = cfg.get("llm") or {}
+        cdir = pcfg.get("config_dir")
+        if cdir:
+            cdir = os.path.abspath(cdir)
+            # Login PROPIO de HARVIS: rotar la cuenta de la CLI no lo toca.
+            # Sin credenciales en la carpeta todavía, se usa el login global
+            # (así el feature queda armado sin romper nada hasta el login).
+            if os.path.exists(os.path.join(cdir, ".credentials.json")):
+                os.environ["CLAUDE_CONFIG_DIR"] = cdir
+            else:
+                os.environ.pop("CLAUDE_CONFIG_DIR", None)
         sdk_tools = [to_sdk(t) for t in tools]
         server = create_sdk_mcp_server(name="kloom", version="1.0.0",
                                        tools=sdk_tools)

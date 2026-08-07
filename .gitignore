@@ -18,3 +18,6 @@ screenshots/
 
 # estado local del pedido de estrella
 estrella.json
+
+# credencial propia de HARVIS (CLAUDE_CONFIG_DIR)
+.claude-harvis/
