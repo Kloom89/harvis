@@ -6,9 +6,11 @@ APARTE, aditivo, con tope, que el usuario puede leer y corregir a mano.
 """
 import asyncio
 import datetime
+import difflib
 import json
 import logging
 import os
+import re
 
 from registry import kloom_tool
 
@@ -19,6 +21,17 @@ MEMFILE = os.path.join(_DIR, "memoria.md")
 HISTFILE = os.path.join(_DIR, "historial.jsonl")
 MAX_HECHOS = 150      # tope: los más viejos se caen al superarlo
 CONTEXT_TURNS = 8     # últimos intercambios que entran al contexto
+
+# "- [fecha]" o "- [fecha, origen]" al inicio de cada hecho
+_PREFIJO = re.compile(r"^- \[[^\]]*\]\s*")
+# Dos hechos así de parecidos son el mismo tema: el nuevo REEMPLAZA al
+# viejo en vez de acumularse (versiones actualizadas o contradicciones
+# con la misma redacción).
+UMBRAL_MISMO_TEMA = 0.72
+
+
+def _texto_hecho(linea: str) -> str:
+    return _PREFIJO.sub("", linea).strip()
 
 
 def _leer_hechos() -> list[str]:
@@ -33,18 +46,34 @@ def _guardar_hechos(hechos: list[str]):
         f.write("\n".join(hechos[-MAX_HECHOS:]) + "\n")
 
 
-@kloom_tool("remember", "Guarda un hecho aprendido del usuario para siempre (preferencias, correcciones, datos personales, cómo le gusta que hagas las cosas). Usala apenas el usuario te corrija o revele algo que convenga recordar.", {"hecho": str})
+@kloom_tool("remember", "Guarda un hecho aprendido del usuario para siempre (preferencias, correcciones, datos personales, cómo le gusta que hagas las cosas). Usala apenas el usuario te corrija o revele algo que convenga recordar. origen: 'dicho' si el usuario lo dijo con sus palabras, 'inferido' si es una deducción tuya.", {"hecho": str, "origen": (str, "dicho")})
 async def remember(args):
     hecho = args["hecho"].strip()
     if not hecho:
         return "No había nada que recordar."
     if len(hecho) > 300:
         hecho = hecho[:300]
+    origen = ("inferido" if str(args.get("origen", "")).strip().lower()
+              == "inferido" else "dicho")
     hechos = _leer_hechos()
-    linea = f"- [{datetime.date.today().isoformat()}] {hecho}"
+    linea = f"- [{datetime.date.today().isoformat()}, {origen}] {hecho}"
+    # ¿Ya hay un hecho del mismo tema? → reemplazar, no acumular.
+    mejor_i, mejor_r = None, 0.0
+    nuevo = hecho.lower()
+    for i, h in enumerate(hechos):
+        r = difflib.SequenceMatcher(None, nuevo,
+                                    _texto_hecho(h).lower()).ratio()
+        if r > mejor_r:
+            mejor_i, mejor_r = i, r
+    if mejor_i is not None and mejor_r >= UMBRAL_MISMO_TEMA:
+        viejo = _texto_hecho(hechos[mejor_i])
+        hechos[mejor_i] = linea
+        await asyncio.to_thread(_guardar_hechos, hechos)
+        log.info("memoria ~: %s (pisó: %s)", hecho, viejo)
+        return f"Anotado, señor (reemplaza lo que tenía: '{viejo}')."
     hechos.append(linea)
     await asyncio.to_thread(_guardar_hechos, hechos)
-    log.info("memoria +: %s", hecho)
+    log.info("memoria + (%s): %s", origen, hecho)
     return "Anotado, señor."
 
 
@@ -105,7 +134,12 @@ def contexto_sistema() -> str:
     partes = []
     if hechos := _leer_hechos():
         partes.append("Lo que aprendiste del usuario hasta ahora "
-                      "(tu memoria, escribís con remember/forget):\n"
+                      "(tu memoria, escribís con remember/forget). "
+                      "'dicho' = lo dijo él, vale como hecho; 'inferido' = "
+                      "deducción tuya, tratala como hipótesis. Si un hecho "
+                      "nuevo contradice uno anotado, borrá el viejo con "
+                      "forget (o preguntale al usuario cuál vale) — nunca "
+                      "dejes los dos:\n"
                       + "\n".join(hechos[-60:]))
     if hist := _historial_tail():
         lineas = [f"El usuario: {h['yo']}\nVos: {h['harvis']}" for h in hist]
