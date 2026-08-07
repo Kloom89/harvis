@@ -21,6 +21,17 @@ log = logging.getLogger("kloom.cerebro")
 BRAINS = ("claude", "ollama", "groq", "kimi", "openai", "gemini")
 
 
+def _error_hablable(result) -> str:
+    """Versión corta y en criollo del error del SDK, apta para TTS."""
+    texto = str(result or "error desconocido")
+    if "subscription access" in texto or "Anthropic API key" in texto:
+        return ("la suscripción no está habilitada para uso headless "
+                "en este momento.")
+    if "rate limit" in texto.lower() or "429" in texto:
+        return "me limitaron por cuota, probá en un rato."
+    return texto[:140].replace("\n", " ") + "."
+
+
 def crear_cerebro(cfg: dict, tools: list[Tool], brain: str | None = None):
     """Devuelve el driver según providers.<brain>.driver. Levanta ValueError
     si el proveedor no está en config y RuntimeError si le falta la API key."""
@@ -146,11 +157,13 @@ class CerebroClaude:
         await self.client.query(text)
         # El texto sale de los deltas (StreamEvent); los TextBlock del
         # AssistantMessage final los duplican y se ignoran.
+        hubo_texto = False
         async for msg in self.client.receive_response():
             if isinstance(msg, StreamEvent):
                 ev = msg.event
                 if (ev.get("type") == "content_block_delta"
                         and ev.get("delta", {}).get("type") == "text_delta"):
+                    hubo_texto = True
                     yield ev["delta"]["text"]
             elif isinstance(msg, AssistantMessage):
                 for block in msg.content:
@@ -158,6 +171,13 @@ class CerebroClaude:
                         log.info("tool: %s %s", block.name, block.input)
             elif isinstance(msg, ResultMessage) and msg.is_error:
                 log.warning("cerebro error: %s", msg.result)
+                # Error sin respuesta ≠ silencio: sin esto el turno vacío
+                # caía al fallback "Hecho, señor." y el fallo quedaba mudo.
+                if not hubo_texto:
+                    yield ("El cerebro Claude falló, señor: "
+                           + _error_hablable(msg.result)
+                           + " Podés cambiarme el cerebro con "
+                             "«cambiá el cerebro a groq».")
 
     async def close(self):
         if self.client:
