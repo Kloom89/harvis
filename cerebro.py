@@ -21,12 +21,14 @@ log = logging.getLogger("kloom.cerebro")
 BRAINS = ("claude", "ollama", "groq", "kimi", "openai", "gemini")
 
 
+class SuscripcionBloqueada(Exception):
+    """La cuenta de Claude activa no permite uso headless de la suscripción
+    (pasa al rotar cuentas). kloom.py la atrapa y cae al cerebro fallback."""
+
+
 def _error_hablable(result) -> str:
     """Versión corta y en criollo del error del SDK, apta para TTS."""
     texto = str(result or "error desconocido")
-    if "subscription access" in texto or "Anthropic API key" in texto:
-        return ("la suscripción no está habilitada para uso headless "
-                "en este momento.")
     if "rate limit" in texto.lower() or "429" in texto:
         return "me limitaron por cuota, probá en un rato."
     return texto[:140].replace("\n", " ") + "."
@@ -113,6 +115,8 @@ class CerebroClaude:
         # reintenta. Se pierde el contexto de la sesión SDK, no el servicio.
         try:
             return await self._ask(text)
+        except SuscripcionBloqueada:
+            raise
         except Exception:
             log.warning("SDK caído, reconecto y reintento", exc_info=True)
             try:
@@ -137,6 +141,8 @@ class CerebroClaude:
             async for t in self._stream(text):
                 solto_algo = True
                 yield t
+        except SuscripcionBloqueada:
+            raise
         except Exception:
             if solto_algo:
                 log.exception("stream cortado a mitad de respuesta")
@@ -171,6 +177,10 @@ class CerebroClaude:
                         log.info("tool: %s %s", block.name, block.input)
             elif isinstance(msg, ResultMessage) and msg.is_error:
                 log.warning("cerebro error: %s", msg.result)
+                texto = str(msg.result or "")
+                if not hubo_texto and ("subscription access" in texto
+                                       or "Anthropic API key" in texto):
+                    raise SuscripcionBloqueada(texto)
                 # Error sin respuesta ≠ silencio: sin esto el turno vacío
                 # caía al fallback "Hecho, señor." y el fallo quedaba mudo.
                 if not hubo_texto:

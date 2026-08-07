@@ -108,6 +108,9 @@ llm:
   # Cerebro activo (clave dentro de providers). Por voz: "harvis, cambiá
   # el cerebro a groq".
   brain: claude
+  # Si la cuenta de Claude activa no permite uso headless de la suscripción,
+  # HARVIS cae solo al primero de estos que conecte y avisa.
+  fallback: [groq, gemini, ollama]
   # El modo coach usa su propio cerebro, sin tools (Llama 70B conversa bien).
   coach_brain: groq
   # Tope en segundos para responder un comando, cualquier driver. Si se

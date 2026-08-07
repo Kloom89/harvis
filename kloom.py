@@ -22,7 +22,7 @@ import yaml
 import trazas
 import stt as stt_mod  # importar primero: arregla el PATH de las DLL CUDA
 from boca import Boca, beep_error, beep_listening, beep_ok, beep_wake
-from cerebro import BRAINS, crear_cerebro
+from cerebro import BRAINS, SuscripcionBloqueada, crear_cerebro
 from oido import Oido
 
 log = logging.getLogger("kloom")
@@ -369,6 +369,24 @@ def match_wake(text: str, cfg: dict, fuzzy: bool = True) -> str | None:
 
 
 from teclado import paste as paste_active
+
+
+async def fallback_cerebro(cfg: dict, tools, actual: str):
+    """La cuenta de Claude activa no permite headless (rota de cuentas):
+    devuelve (driver conectado, nombre) del primer cerebro de llm.fallback
+    que levante, o (None, None) si ninguno está configurado/vivo."""
+    lcfg = cfg.get("llm") or {}
+    for b in lcfg.get("fallback", ["groq", "gemini", "ollama"]):
+        if b == actual:
+            continue
+        try:
+            nuevo = crear_cerebro(cfg, tools, brain=b)
+            await nuevo.connect()
+            log.info("fallback de cerebro: %s → %s", actual, b)
+            return nuevo, b
+        except Exception:
+            log.warning("fallback a %s no disponible", b)
+    return None, None
 
 
 async def main():
@@ -1196,6 +1214,23 @@ async def main():
             try:
                 async with asyncio.timeout(brain_timeout):
                     reply = await cerebro.ask(command)
+            except SuscripcionBloqueada:
+                nuevo, b = await fallback_cerebro(cfg, all_tools,
+                                                  brain_actual)
+                if nuevo:
+                    await cerebro.close()
+                    cerebro = nuevo
+                    brain_actual = b
+                    hud.set_brain(b)
+                    await tg.send(f"La cuenta de Claude no permite uso "
+                                  f"headless; sigo con {b.capitalize()}.")
+                    oido.queue.put_nowait(("tg", command))
+                else:
+                    await tg.send("La cuenta de Claude no permite uso "
+                                  "headless y no tengo otro cerebro "
+                                  "disponible, señor.")
+                hud.set_state("idle")
+                continue
             except TimeoutError:
                 reply = "Eso me llevó demasiado y lo corté, señor."
             except Exception:
@@ -1343,6 +1378,33 @@ async def main():
                     cerebro = nuevo
                 except Exception:
                     log.exception("reconexión post-aborto falló")
+        except SuscripcionBloqueada:
+            # La cuenta de Claude activa (van rotando) no permite headless:
+            # caer solo al primer fallback vivo y repetir el pedido ahí.
+            log.warning("cuenta de Claude sin acceso headless; "
+                        "busco cerebro de respaldo")
+            nuevo, b = await fallback_cerebro(cfg, all_tools, brain_actual)
+            if nuevo and objetivo is cerebro:
+                await cerebro.close()
+                cerebro = nuevo
+                brain_actual = b
+                hud.set_brain(b)
+                reply = (f"La cuenta de Claude no permite uso headless "
+                         f"ahora, señor; sigo con {b.capitalize()}.")
+                hud.reply(reply)
+                await boca.say(reply)
+                oido.queue.put_nowait(("text", command))
+            else:
+                if nuevo:
+                    await nuevo.close()
+                reply = ("La cuenta de Claude no permite uso headless, "
+                         "señor, y no tengo otro cerebro disponible. "
+                         "Cambiá de cuenta o configurá groq, gemini u "
+                         "ollama.")
+                beep_error()
+                hud.error_flash()
+                hud.reply(reply)
+                await boca.say(reply)
         except TimeoutError:
             log.warning("turno cortado tras %ss", brain_timeout)
             reply = ("Eso me estaba llevando demasiado y lo corté, señor. "
