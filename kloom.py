@@ -471,18 +471,6 @@ async def main():
     oido = Oido(cfg, loop)
     oido.start()
 
-    # Vigía de cuenta: el usuario rota logins de Claude en la CLI/desktop;
-    # cuando el email activo cambia se encola un evento y el cerebro Claude
-    # se reconecta solo con la cuenta nueva — sin reiniciar HARVIS.
-    async def vigia_cuenta():
-        previa = cuenta_activa()
-        while True:
-            await asyncio.sleep(15)
-            actual = cuenta_activa()
-            if actual and actual != previa:
-                previa = actual
-                oido.queue.put_nowait(("cuenta_claude", actual))
-    asyncio.create_task(vigia_cuenta())
 
     class _NoHud:
         def __getattr__(self, _):
@@ -874,29 +862,6 @@ async def main():
         # Conversación de cero (botón 🔄 del HUD o "conversación nueva"):
         # recrea el cerebro actual — mismo camino que el switch. MUDO a
         # pedido del usuario: limpia el chat del HUD y listo, sin anuncio.
-        if kind == "cuenta_claude":
-            # Login nuevo en la CLI (el usuario rota de cuenta): si el
-            # cerebro por defecto es Claude, retomarlo con la cuenta nueva
-            # — aunque hubiera caído a un fallback por la anterior.
-            deseado = (cfg.get("llm") or {}).get("brain", "claude")
-            pcfg_d = ((cfg.get("llm") or {}).get("providers") or {}) \
-                .get(deseado) or {}
-            if pcfg_d.get("driver") != "sdk":
-                continue
-            log.info("cuenta de Claude cambió a %s; reconecto", audio)
-            try:
-                nuevo = crear_cerebro(cfg, all_tools, brain=deseado)
-                await nuevo.connect()
-                await cerebro.close()
-                cerebro = nuevo
-                brain_actual = deseado
-                hud.set_brain(deseado)
-                hud.aviso(f"Cuenta de Claude: {audio}")
-                log.info("cerebro claude reconectado con %s", audio)
-            except Exception:
-                log.exception("reconexión con la cuenta nueva falló")
-            continue
-
         if kind == "reset":
             def _drenar_resets():
                 # clics repetidos mientras reconecta (~8 s): colapsar en UNO
@@ -1252,15 +1217,33 @@ async def main():
                 async with asyncio.timeout(brain_timeout):
                     reply = await cerebro.ask(command)
             except SuscripcionBloqueada:
-                nuevo, b = await fallback_cerebro(cfg, all_tools,
-                                                  brain_actual)
+                actual = cuenta_activa()
+                nuevo = b = None
+                if actual and actual != getattr(cerebro, "cuenta", ""):
+                    try:
+                        nuevo = crear_cerebro(cfg, all_tools,
+                                              brain=brain_actual)
+                        await nuevo.connect()
+                        b = brain_actual
+                    except Exception:
+                        log.exception("Claude con la cuenta nueva "
+                                      "no conectó")
+                        nuevo = None
+                if nuevo is None:
+                    nuevo, b = await fallback_cerebro(cfg, all_tools,
+                                                      brain_actual)
                 if nuevo:
                     await cerebro.close()
                     cerebro = nuevo
                     brain_actual = b
                     hud.set_brain(b)
-                    await tg.send(f"La cuenta de Claude no permite uso "
-                                  f"headless; sigo con {b.capitalize()}.")
+                    if type(nuevo).__name__ == "CerebroClaude":
+                        await tg.send(f"Sigo — cuenta nueva de Claude: "
+                                      f"{actual}.")
+                    else:
+                        await tg.send(f"La cuenta de Claude no permite uso "
+                                      f"headless; sigo con "
+                                      f"{b.capitalize()}.")
                     oido.queue.put_nowait(("tg", command))
                 else:
                     await tg.send("La cuenta de Claude no permite uso "
@@ -1416,18 +1399,39 @@ async def main():
                 except Exception:
                     log.exception("reconexión post-aborto falló")
         except SuscripcionBloqueada:
-            # La cuenta de Claude activa (van rotando) no permite headless:
-            # caer solo al primer fallback vivo y repetir el pedido ahí.
-            log.warning("cuenta de Claude sin acceso headless; "
-                        "busco cerebro de respaldo")
-            nuevo, b = await fallback_cerebro(cfg, all_tools, brain_actual)
+            # La cuenta con la que ESTE cliente conectó no permite headless.
+            # Si el usuario ya rotó el login, se reintenta Claude con la
+            # cuenta nueva; si no (o si tampoco conecta), fallback.
+            actual = cuenta_activa()
+            cambio = (objetivo is cerebro and actual
+                      and actual != getattr(cerebro, "cuenta", ""))
+            nuevo = b = None
+            if cambio:
+                log.info("login rotado (%s → %s): reintento Claude",
+                         getattr(cerebro, "cuenta", "?"), actual)
+                try:
+                    nuevo = crear_cerebro(cfg, all_tools, brain=brain_actual)
+                    await nuevo.connect()
+                    b = brain_actual
+                except Exception:
+                    log.exception("Claude con la cuenta nueva no conectó")
+                    nuevo = None
+            if nuevo is None:
+                log.warning("cuenta de Claude sin acceso headless; "
+                            "busco cerebro de respaldo")
+                nuevo, b = await fallback_cerebro(cfg, all_tools,
+                                                  brain_actual)
             if nuevo and objetivo is cerebro:
                 await cerebro.close()
                 cerebro = nuevo
                 brain_actual = b
                 hud.set_brain(b)
-                reply = (f"La cuenta de Claude no permite uso headless "
-                         f"ahora, señor; sigo con {b.capitalize()}.")
+                if type(nuevo).__name__ == "CerebroClaude":
+                    reply = (f"Sigo, señor — cuenta nueva de Claude: "
+                             f"{actual}.")
+                else:
+                    reply = (f"La cuenta de Claude no permite uso headless "
+                             f"ahora, señor; sigo con {b.capitalize()}.")
                 hud.reply(reply)
                 await boca.say(reply)
                 oido.queue.put_nowait(("text", command))

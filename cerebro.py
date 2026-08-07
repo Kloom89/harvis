@@ -110,6 +110,10 @@ class CerebroClaude:
             # default de 1 MB reventaba el reader ("mirá Teams" murió así).
             max_buffer_size=10 * 1024 * 1024,
         )
+        # Con qué login se creó este cliente: si al fallar por suscripción
+        # la cuenta activa ya es otra, kloom reintenta Claude antes de caer
+        # a un fallback.
+        self.cuenta = cuenta_activa()
         self.client: ClaudeSDKClient | None = None
         # El CLI tarda ~50 s en arranque frío: se conecta de fondo y quien
         # necesite el cerebro espera acá en vez de abrir una segunda sesión.
