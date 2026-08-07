@@ -105,7 +105,13 @@ class Boca:
         try:
             while True:
                 buf = await cola.get()
-                if buf is None or self.abortar:
+                if self.abortar:
+                    break
+                if buf is None:
+                    # el stream terminó: si el cerebro reventó adentro,
+                    # la excepción vive en la task — propagarla (antes se
+                    # perdía y el turno terminaba "bien" con reply vacío).
+                    await tarea
                     break
                 await self._play(buf)
         finally:
