@@ -22,7 +22,8 @@ import yaml
 import trazas
 import stt as stt_mod  # importar primero: arregla el PATH de las DLL CUDA
 from boca import Boca, beep_error, beep_listening, beep_ok, beep_wake
-from cerebro import BRAINS, SuscripcionBloqueada, crear_cerebro
+from cerebro import (BRAINS, SuscripcionBloqueada, crear_cerebro,
+                     cuenta_activa)
 from oido import Oido
 
 log = logging.getLogger("kloom")
@@ -470,6 +471,19 @@ async def main():
     oido = Oido(cfg, loop)
     oido.start()
 
+    # Vigía de cuenta: el usuario rota logins de Claude en la CLI/desktop;
+    # cuando el email activo cambia se encola un evento y el cerebro Claude
+    # se reconecta solo con la cuenta nueva — sin reiniciar HARVIS.
+    async def vigia_cuenta():
+        previa = cuenta_activa()
+        while True:
+            await asyncio.sleep(15)
+            actual = cuenta_activa()
+            if actual and actual != previa:
+                previa = actual
+                oido.queue.put_nowait(("cuenta_claude", actual))
+    asyncio.create_task(vigia_cuenta())
+
     class _NoHud:
         def __getattr__(self, _):
             return lambda *a: None
@@ -860,6 +874,29 @@ async def main():
         # Conversación de cero (botón 🔄 del HUD o "conversación nueva"):
         # recrea el cerebro actual — mismo camino que el switch. MUDO a
         # pedido del usuario: limpia el chat del HUD y listo, sin anuncio.
+        if kind == "cuenta_claude":
+            # Login nuevo en la CLI (el usuario rota de cuenta): si el
+            # cerebro por defecto es Claude, retomarlo con la cuenta nueva
+            # — aunque hubiera caído a un fallback por la anterior.
+            deseado = (cfg.get("llm") or {}).get("brain", "claude")
+            pcfg_d = ((cfg.get("llm") or {}).get("providers") or {}) \
+                .get(deseado) or {}
+            if pcfg_d.get("driver") != "sdk":
+                continue
+            log.info("cuenta de Claude cambió a %s; reconecto", audio)
+            try:
+                nuevo = crear_cerebro(cfg, all_tools, brain=deseado)
+                await nuevo.connect()
+                await cerebro.close()
+                cerebro = nuevo
+                brain_actual = deseado
+                hud.set_brain(deseado)
+                hud.aviso(f"Cuenta de Claude: {audio}")
+                log.info("cerebro claude reconectado con %s", audio)
+            except Exception:
+                log.exception("reconexión con la cuenta nueva falló")
+            continue
+
         if kind == "reset":
             def _drenar_resets():
                 # clics repetidos mientras reconecta (~8 s): colapsar en UNO

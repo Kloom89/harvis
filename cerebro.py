@@ -2,6 +2,7 @@
 La sesión es persistente: los comandos sucesivos comparten contexto
 ("abrí spotify" ... "ahora cerrala")."""
 import asyncio
+import json
 import logging
 import os
 
@@ -19,6 +20,18 @@ from registry import Tool, to_sdk
 log = logging.getLogger("kloom.cerebro")
 
 BRAINS = ("claude", "ollama", "groq", "kimi", "openai", "gemini")
+
+
+def cuenta_activa() -> str:
+    """Email de la cuenta Claude logueada en la CLI ("" si no hay) — la que
+    va a usar el SDK. Respeta CLAUDE_CONFIG_DIR (login propio opcional)."""
+    base = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~")
+    try:
+        with open(os.path.join(base, ".claude.json"), encoding="utf-8") as f:
+            return (json.load(f).get("oauthAccount") or {}).get(
+                "emailAddress", "")
+    except Exception:
+        return ""
 
 
 class SuscripcionBloqueada(Exception):
