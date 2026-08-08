@@ -15,6 +15,7 @@
   <img alt="Offline wake word" src="https://img.shields.io/badge/wake%20word-100%25%20local-3dd68c?style=flat-square">
   <img alt="Brains" src="https://img.shields.io/badge/brains-Claude%20·%20Groq%20·%20Ollama%20·%20OpenAI%20·%20Gemini-35d6ff?style=flat-square">
   <a href="https://t.me/+0tInup5bmYBiZjNh"><img alt="Telegram" src="https://img.shields.io/badge/community-Telegram-35d6ff?style=flat-square&logo=telegram&logoColor=white"></a>
+  <a href="https://github.com/sponsors/Kloom89"><img alt="Sponsor" src="https://img.shields.io/badge/sponsor-HARVIS-ff5f8f?style=flat-square&logo=githubsponsors&logoColor=white"></a>
 </p>
 
 <p align="center">
@@ -244,10 +245,31 @@ politely disables itself).
 
 ## Language
 
-HARVIS speaks **Spanish out of the box** (that's what the screenshots show) —
-the wake word, prompts, voice and command phrasings all live in `config.yaml`,
-so pointing it at an English voice and English prompts is a config change, not a
-fork. PRs that make the built-in prompts multilingual are welcome.
+HARVIS ships **bilingual — Spanish and English**, switched from the HUD
+(**⚙ AJUSTES → Idioma / Language**), live, no restart. That one setting drives
+everything: the interface, the language Whisper transcribes in, and the language
+the brain answers in. It never guesses the language from your speech — set it to
+English and it answers in English even if you ask in Spanish.
+
+The wake word, the command phrasings and the voices live in `config.yaml`.
+Adding a third language is one entry in the HUD's `I18N` table plus a voice —
+PRs welcome.
+
+## Sponsors
+
+HARVIS is free and stays free. Sponsoring is what buys the hours that go into
+it: new skills, fewer rough edges, and answering the people who show up with
+issues.
+
+<p align="center">
+  <a href="https://github.com/sponsors/Kloom89"><img alt="Sponsor HARVIS" src="https://img.shields.io/badge/sponsor-HARVIS-ff5f8f?style=for-the-badge&logo=githubsponsors&logoColor=white"></a>
+</p>
+
+Sponsors get their name in this section and their issues looked at first — and
+from $100/month, the **commercial-use license** the standard one doesn't grant
+(see [License](#license--personal-use-not-for-sale)).
+
+*No sponsors yet. Yours would be the first one here.*
 
 ## License — personal use, not for sale
 

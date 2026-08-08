@@ -16,6 +16,7 @@
   <img alt="Wake word local" src="https://img.shields.io/badge/wake%20word-100%25%20local-3dd68c?style=flat-square">
   <img alt="Cerebros" src="https://img.shields.io/badge/cerebros-Claude%20·%20Groq%20·%20Ollama%20·%20OpenAI%20·%20Gemini-35d6ff?style=flat-square">
   <a href="https://t.me/+0tInup5bmYBiZjNh"><img alt="Telegram" src="https://img.shields.io/badge/comunidad-Telegram-35d6ff?style=flat-square&logo=telegram&logoColor=white"></a>
+  <a href="https://github.com/sponsors/Kloom89"><img alt="Sponsor" src="https://img.shields.io/badge/sponsor-HARVIS-ff5f8f?style=flat-square&logo=githubsponsors&logoColor=white"></a>
 </p>
 
 <p align="center">
@@ -252,10 +253,31 @@ si lo dejás vacío, esa herramienta se desactiva sola y te lo dice).
 
 ## Idioma
 
-HARVIS habla **español de fábrica** (es lo que se ve en las capturas). El wake
-word, los prompts, la voz y las frases de cada comando viven en `config.yaml`,
-así que apuntarlo a otro idioma es un cambio de configuración, no un fork. Los
-PRs que hagan multilingües los prompts internos son bienvenidos.
+HARVIS viene **bilingüe — español e inglés**, se cambia desde el HUD
+(**⚙ AJUSTES → Idioma / Language**), en vivo y sin reiniciar. Ese ajuste manda
+sobre todo: la interfaz, el idioma en que Whisper transcribe y el idioma en que
+responde el cerebro. Nunca lo adivina de tu voz: si lo ponés en inglés te
+contesta en inglés aunque le hables en español.
+
+El wake word, las frases de cada comando y las voces viven en `config.yaml`.
+Sumar un tercer idioma es una entrada en la tabla `I18N` del HUD más una voz —
+los PRs son bienvenidos.
+
+## Sponsors
+
+HARVIS es gratis y va a seguir siéndolo. Lo que compra un sponsor son las horas
+que le entran: skills nuevas, menos asperezas, y responderle a la gente que
+aparece con un problema.
+
+<p align="center">
+  <a href="https://github.com/sponsors/Kloom89"><img alt="Sponsor HARVIS" src="https://img.shields.io/badge/sponsor-HARVIS-ff5f8f?style=for-the-badge&logo=githubsponsors&logoColor=white"></a>
+</p>
+
+Los sponsors van con su nombre en esta sección y sus issues se miran primero — y
+desde 100 USD por mes, incluye la **licencia de uso comercial** que la estándar
+no da (mirá la [licencia](#licencia--uso-personal-no-se-vende)).
+
+*Todavía no hay ninguno. El tuyo sería el primero acá.*
 
 ## Licencia — uso personal, no se vende
 
