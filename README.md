@@ -266,7 +266,7 @@ issues.
 </p>
 
 Sponsors get their name in this section and their issues looked at first — and
-from $100/month, the **commercial-use license** the standard one doesn't grant
+from $250/month, the **commercial-use license** the standard one doesn't grant
 (see [License](#license--personal-use-not-for-sale)).
 
 *No sponsors yet. Yours would be the first one here.*

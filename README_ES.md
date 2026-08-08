@@ -274,7 +274,7 @@ aparece con un problema.
 </p>
 
 Los sponsors van con su nombre en esta sección y sus issues se miran primero — y
-desde 100 USD por mes, incluye la **licencia de uso comercial** que la estándar
+desde 250 USD por mes, incluye la **licencia de uso comercial** que la estándar
 no da (mirá la [licencia](#licencia--uso-personal-no-se-vende)).
 
 *Todavía no hay ninguno. El tuyo sería el primero acá.*
