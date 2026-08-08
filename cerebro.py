@@ -47,6 +47,21 @@ def _error_hablable(result) -> str:
     return texto[:140].replace("\n", " ") + "."
 
 
+def sufijo_idioma(cfg: dict) -> str:
+    """Directiva de idioma según el AJUSTE (cfg["lang"]), no según el idioma
+    del comando. Va al FINAL del system prompt: enterrada en el medio, un
+    modelo chico la ignora y repite el español de las tools y la memoria."""
+    if cfg.get("lang") == "en":
+        return ("\nCRITICAL — LANGUAGE: the app is set to ENGLISH. Every "
+                "single reply must be in English, no matter what language "
+                "the command or the tool results come in. Tool results may "
+                "arrive in Spanish (dates, weather, statuses): translate "
+                "them before speaking.")
+    return ("\nCRÍTICO — IDIOMA: la app está en ESPAÑOL. Todas tus "
+            "respuestas van en español, sin importar en qué idioma llegue "
+            "el comando o lo que devuelvan las tools.")
+
+
 def crear_cerebro(cfg: dict, tools: list[Tool], brain: str | None = None):
     """Devuelve el driver según providers.<brain>.driver. Levanta ValueError
     si el proveedor no está en config y RuntimeError si le falta la API key."""
@@ -55,16 +70,6 @@ def crear_cerebro(cfg: dict, tools: list[Tool], brain: str | None = None):
     pcfg = (lcfg.get("providers") or {}).get(brain)
     if not pcfg:
         raise ValueError(f"Proveedor '{brain}' no está en llm.providers")
-    # El idioma lo manda el AJUSTE (cfg["lang"]), no el idioma en que llegó
-    # el comando: en 'en' responde siempre en inglés, en 'es' siempre en
-    # español. Copia superficial para no acumular sufijos en el cfg vivo.
-    sufijo = ("\nAnswer ALWAYS in English, even if the command arrives in "
-              "another language." if cfg.get("lang") == "en" else
-              "\nRespondé SIEMPRE en español, aunque el comando llegue en "
-              "otro idioma.")
-    cfg = {**cfg, "llm": {**lcfg,
-                          "system_prompt": lcfg.get("system_prompt", "")
-                          + sufijo}}
     if pcfg.get("driver") == "sdk":
         return CerebroClaude(cfg, pcfg, tools)
     from cerebro_jarvis import CerebroJarvis
@@ -99,7 +104,8 @@ class CerebroClaude:
                             "config de KLOOM). Si te preguntan qué modelo "
                             "sos, decí exactamente eso y aclará que se "
                             "cambia en config.yaml; nunca inventes otro."
-                          + contexto_sistema(),
+                          + contexto_sistema()
+                          + sufijo_idioma(cfg),
             # CodeGraph entra como tools comunes (tools/codigo.py, vía CLI):
             # así lo tienen TODOS los cerebros, no solo Claude.
             mcp_servers={"kloom": server},

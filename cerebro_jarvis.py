@@ -59,10 +59,12 @@ class CerebroJarvis:
             if 0 < corte < len(d) - 10:
                 o["function"]["description"] = d[:corte + 1]
             self.oai_tools.append(o)
+        from cerebro import sufijo_idioma
         from tools.memoria import contexto_sistema
         system = ((cfg.get("llm") or {}).get("system_prompt", "")
                   + f"\nHoy tu motor es {self.display}."
-                  + contexto_sistema())
+                  + contexto_sistema()
+                  + sufijo_idioma(cfg))
         self.messages: list[dict] = [{"role": "system", "content": system}]
 
     async def connect(self):
