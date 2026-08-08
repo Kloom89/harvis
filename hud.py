@@ -17,6 +17,19 @@ try:
 except Exception:
     AVATAR_URI = ""
 
+def _data_uri(nombre: str) -> str:
+    ruta = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "assets", nombre)
+    try:
+        return ("data:image/png;base64,"
+                + base64.b64encode(open(ruta, "rb").read()).decode())
+    except Exception:
+        return ""
+
+
+GEAR_URI = _data_uri("gear.png")
+CART_URI = _data_uri("cart.png")
+
 # Inter embebida (assets/fonts): tipografía moderna sin depender de internet.
 _FONT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                      "assets", "fonts", "inter-latin.woff2")
@@ -285,17 +298,19 @@ h1:hover #marca { text-decoration: underline; }
 #marca { font-size: 10px; letter-spacing: 1.2px; color: #7de4ff;
   font-weight: 700; white-space: nowrap;
   text-shadow: 0 0 8px rgba(53, 214, 255, .55); }
-#skills-btn { font-size: 10.5px; letter-spacing: 1.4px; color: var(--muted);
-  border: 1px solid rgba(53, 214, 255, .18); border-radius: 8px;
-  padding: 4px 10px; background: rgba(10, 25, 38, .6); cursor: pointer;
-  display: flex; align-items: center; gap: 5px;
-  transition: color .25s ease, border-color .25s ease, box-shadow .25s ease; }
-#skills-btn::before { content: '⚙'; font-size: 12.5px;
-  transition: transform .45s ease; }
-#skills-btn:hover::before { transform: rotate(70deg); }
-#skills-btn:hover, body.skills #skills-btn { color: var(--cyan);
-  border-color: var(--cyan-dim);
-  box-shadow: 0 0 8px rgba(53, 214, 255, .18); }
+/* Botones de ícono del header: los PNG vienen con fondo oscuro propio,
+   así que van recortados en un botón redondeado, sin transparencia. */
+.icon-btn { width: 32px; height: 32px; flex: none; padding: 0;
+  border: 1px solid rgba(53, 214, 255, .18); border-radius: 9px;
+  overflow: hidden; background: #060f18; cursor: pointer;
+  transition: border-color .25s ease, box-shadow .25s ease,
+    transform .25s ease; }
+.icon-btn img { width: 100%; height: 100%; object-fit: cover;
+  display: block; }
+.icon-btn:hover { border-color: var(--cyan-dim);
+  box-shadow: 0 0 10px rgba(53, 214, 255, .3); transform: scale(1.06); }
+body.skills #skills-btn, body.tienda #tienda-btn {
+  border-color: var(--cyan); box-shadow: 0 0 10px rgba(53, 214, 255, .4); }
 
 /* ---------- vista ajustes ---------- */
 #skills-view { display: none; flex: 1; overflow-y: auto; padding: 12px 14px 0;
@@ -305,6 +320,16 @@ h1:hover #marca { text-decoration: underline; }
 body.skills #skills-view { display: block; }
 body.skills #log, body.skills #timers, body.skills #brains,
 body.skills #entrada { display: none !important; }
+#tienda-view { display: none; flex: 1; overflow-y: auto;
+  padding: 12px 14px; font-size: 12px; }
+#tienda-view::-webkit-scrollbar { width: 4px; }
+#tienda-view::-webkit-scrollbar-thumb { background: var(--line); }
+body.tienda #tienda-view { display: block; }
+body.tienda #log, body.tienda #timers, body.tienda #brains,
+body.tienda #entrada, body.tienda #skills-view,
+body.skills #tienda-view { display: none !important; }
+#tienda-view h2 { font-size: 11px; letter-spacing: 2px; color: var(--cyan);
+  text-transform: uppercase; margin: 2px 0 4px; }
 #sk-lang { display: flex; align-items: center; gap: 8px;
   margin: 0 0 10px; }
 #sk-lang label { margin: 0 !important; }
@@ -460,11 +485,14 @@ body.error #estado-line::before { background: #ff5c5c; }
   <header class="pywebview-drag-region">
     <div id="mini-orb" onclick="pywebview.api.toggle()" title="Achicar"></div>
     <h1 onclick="pywebview.api.abrir_web()" title="KloomStudio.com.ar"><span id="app-name">HARVIS</span><span id="marca">by KloomStudio.com.ar</span></h1>
-    <button id="skills-btn" onclick="toggleSkills()"
-            title="Nombre, comandos de voz, briefing y skills">AJUSTES</button>
+    <button id="tienda-btn" class="icon-btn" onclick="toggleTienda()"
+            title="Tienda de skills"><img src="__CART__" alt=""></button>
+    <button id="skills-btn" class="icon-btn" onclick="toggleSkills()"
+            title="Ajustes"><img src="__GEAR__" alt=""></button>
   </header>
   <div id="estado-line">esperando «Harvis…»</div>
   <div id="skills-view"></div>
+  <div id="tienda-view"></div>
   <div id="log"></div>
   <div id="timers"></div>
   <div id="brains"></div>
@@ -769,8 +797,8 @@ function aplicarIdioma() {
     if (el) el[prop] = val;
   };
   set('cmd', 'placeholder', t.placeholder(NOMBRE));
-  set('skills-btn', 'textContent', t.btnAjustes);
   set('skills-btn', 'title', t.tipAjustes);
+  set('tienda-btn', 'title', t.secTienda);
   set('mic-btn', 'title', t.tipMic);
   set('new-btn', 'title', t.tipNueva);
   set('stop-btn', 'title', t.tipStop);
@@ -791,10 +819,26 @@ function cambiarIdioma(v) {
 }
 async function toggleSkills() {
   const b = document.body;
+  b.classList.remove('tienda');
   b.classList.toggle('skills');
   if (!b.classList.contains('skills')) return;
   SK_DATA = await pywebview.api.get_skills_data();
   renderSkills(SK_DATA);
+}
+async function toggleTienda() {
+  const b = document.body;
+  b.classList.remove('skills');
+  b.classList.toggle('tienda');
+  if (b.classList.contains('tienda')) renderTienda();
+}
+async function renderTienda() {
+  const t = T();
+  const v = document.getElementById('tienda-view');
+  v.innerHTML = `<h2>${t.secTienda}</h2><p class="desc">${t.descTienda}</p>` +
+    '<div id="sk-tienda"></div>' +
+    `<button class="sk-accion" style="margin-top:14px" ` +
+    `onclick="toggleTienda()">${t.btnVolver}</button>`;
+  await pintarTienda();
 }
 function renderSkills(d) {
   const t = T();
@@ -851,11 +895,6 @@ function renderSkills(d) {
       `<span class="t">tools: ${s.tools.join(', ')}</span></div>`).join('') +
     `<button class="sk-accion" onclick="instalarSkill()">${t.btnInstalar}</button>`);
 
-  // El catálogo vive remoto (store.json del repo): sumar una skill la
-  // publica en todas las instalaciones sin sacar versión nueva.
-  h += sec(t.secTienda, t.hintTienda, t.descTienda,
-    '<div id="sk-tienda"></div>');
-
   h += sec(t.secApoyar, t.hintApoyar, t.descApoyar,
     `<p class="desc">${t.descTrabajo}</p>` +
     '<button class="sk-accion sk-sponsor" onclick="pywebview.api.abrir_url' +
@@ -868,7 +907,6 @@ function renderSkills(d) {
     '</div>';
   v.innerHTML = h;
   v.scrollTop = 0;
-  pintarTienda();
 }
 const STORE_URL = 'https://raw.githubusercontent.com/Kloom89/harvis/' +
   'main/store.json';
@@ -886,11 +924,9 @@ async function pintarTienda() {
     c.innerHTML = `<p class="desc">${t.tiendaVacia}</p>`;
     return;
   }
-  // Sin url de checkout la skill todavía no está a la venta. Si no queda
-  // ninguna, la tienda entera se esconde: una vitrina vacía es peor que
-  // no tener vitrina (y no es un error, así que no va el aviso de red).
+  // Sin url de checkout la skill todavía no está a la venta y se filtra.
   const items = (STORE_CACHE.skills || []).filter(s => s.url);
-  if (!items.length) { c.closest('.sec').style.display = 'none'; return; }
+  if (!items.length) { c.innerHTML = `<p class="desc">${t.tiendaVacia}</p>`; return; }
   c.innerHTML = items.map(s => {
     const n = (s.name || {})[LANG] || (s.name || {}).en || s.id;
     const d = (s.desc || {})[LANG] || (s.desc || {}).en || '';
@@ -1227,7 +1263,9 @@ def serve_main_thread(timeout: float = 300):
         "HARVIS", html=HTML.replace("__AVATAR__", AVATAR_URI)
                           .replace("__FONT__", FONT_URI)
                           .replace("__PROMOS__", _promos_json())
-                          .replace("__LANG__", _hud_lang(hud.cfg)),
+                          .replace("__LANG__", _hud_lang(hud.cfg))
+                          .replace("__GEAR__", GEAR_URI)
+                          .replace("__CART__", CART_URI),
         frameless=True, easy_drag=False,
         on_top=True, width=w, height=h,
         min_size=(ORB[0], ORB[1]),  # el default es (200,100) y pisa al orbe
