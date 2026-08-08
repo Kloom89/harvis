@@ -15,6 +15,32 @@
         "en": "Spoken conversation practice in English, Portuguese, Italian, French or German. It corrects you mid-chat without breaking the flow, and remembers your mistakes for next time."
       },
       "url": "https://kloom.lemonsqueezy.com/checkout/buy/9d0dc732-743e-4481-8e1e-48b7f11e8372"
+    },
+    {
+      "id": "notas-vault",
+      "price": "USD 10",
+      "name": {
+        "es": "Notas Obsidian",
+        "en": "Obsidian Notes"
+      },
+      "desc": {
+        "es": "Tu vault de Obsidian (o cualquier carpeta de notas) por voz: buscá, leé, creá, agregá y anotá en la diaria sin abrir la app. Compra única.",
+        "en": "Your Obsidian vault (or any folder of Markdown notes) by voice: search, read, create, append and daily note without opening the app. One-off purchase."
+      },
+      "url": "https://kloom.lemonsqueezy.com/checkout/buy/2664d3c8-6348-4e51-aaee-ae47666c841c"
+    },
+    {
+      "id": "reuniones",
+      "price": "USD 15",
+      "name": {
+        "es": "Reuniones",
+        "en": "Meetings"
+      },
+      "desc": {
+        "es": "Grabá la reunión (lo que suena y tu mic), se transcribe local con Whisper y HARVIS te da el resumen con las tareas. El audio nunca sale de tu PC. Compra única.",
+        "en": "Record the meeting (system audio plus your mic), it transcribes locally with Whisper and HARVIS gives you the summary and action items. Audio never leaves your PC. One-off purchase."
+      },
+      "url": "https://kloom.lemonsqueezy.com/checkout/buy/88e82ea4-9496-45be-9505-7ee66213bfd5"
     }
   ]
 }
