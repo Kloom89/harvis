@@ -401,6 +401,9 @@ body.skills #tienda-view { display: none !important; }
 .precio i { font-style: normal; font-weight: 400; color: var(--muted); }
 .sk-comprar { margin-top: 8px; padding: 6px 0; border-style: solid;
   border-color: var(--cyan-dim); }
+.sk-propia { margin-top: 8px; padding: 6px 0; text-align: center;
+  color: var(--green); font-size: 12px; border: 1px solid
+  rgba(61, 214, 140, .35); border-radius: 10px; }
 .sk-comprar:hover { background: rgba(53, 214, 255, .1); }
 .sk-sponsor { border-color: #a8477a; color: #ff8fc4; }
 .sk-sponsor:hover { border-color: #db61a2;
@@ -595,6 +598,7 @@ es: {
     'llega el archivo .py y la instalás acá arriba, en Skills instaladas.',
   tiendaVacia: 'No pude traer el catálogo. Fijate la conexión.',
   btnComprar: 'Comprar', btnSuscribir: 'Suscribirme', porMes: ' / mes',
+  instalada: '✓ Ya la tenés instalada',
   secApoyar: 'Apoyar el proyecto', hintApoyar: 'gratis para uso personal',
   descApoyar: 'HARVIS es gratis y va a seguir siéndolo. Lo que compra un ' +
     'sponsor son las horas que le entran: skills nuevas, menos asperezas, ' +
@@ -666,6 +670,7 @@ en: {
     'the .py file and install it right above, under Installed skills.',
   tiendaVacia: 'Could not fetch the catalogue. Check your connection.',
   btnComprar: 'Buy', btnSuscribir: 'Subscribe', porMes: ' / month',
+  instalada: '✓ Already installed',
   secApoyar: 'Support the project', hintApoyar: 'free for personal use',
   descApoyar: 'HARVIS is free and stays free. What sponsorship buys is ' +
     'time: hours that go into new skills, fewer rough edges, and ' +
@@ -829,8 +834,14 @@ async function toggleTienda() {
   b.classList.toggle('tienda');
   if (b.classList.contains('tienda')) renderTienda();
 }
+let INSTALADAS = new Set();
 async function renderTienda() {
   const t = T();
+  // lo ya instalado no se ofrece a la venta: se marca como tuyo
+  try {
+    const d = await pywebview.api.get_skills_data();
+    INSTALADAS = new Set((d.skills || []).map(s => s.nombre));
+  } catch (e) { INSTALADAS = new Set(); }
   const v = document.getElementById('tienda-view');
   v.innerHTML = `<h2>${t.secTienda}</h2><p class="desc">${t.descTienda}</p>` +
     '<div id="sk-tienda"></div>' +
@@ -934,11 +945,15 @@ async function pintarTienda() {
     // no descubrirse en el resumen de la tarjeta.
     const mensual = s.period === 'month';
     const precio = (s.price || '') + (mensual ? `<i>${t.porMes}</i>` : '');
+    const propia = INSTALADAS.has(s.id.replace(/-/g, '_'));
     return `<div class="sk-item"><b>${n}</b> <span class="precio">` +
       `${precio}</span><br><span class="t">${d}</span>` +
-      `<button class="sk-accion sk-comprar" onclick="pywebview.api.` +
-      `abrir_url('${url}')">` +
-      `${mensual ? t.btnSuscribir : t.btnComprar}</button></div>`;
+      (propia
+        ? `<div class="sk-propia">${t.instalada}</div>`
+        : `<button class="sk-accion sk-comprar" onclick="pywebview.api.` +
+          `abrir_url('${url}')">` +
+          `${mensual ? t.btnSuscribir : t.btnComprar}</button>`) +
+      `</div>`;
   }).join('');
 }
 async function instalarSkill() {
