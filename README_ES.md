@@ -118,11 +118,17 @@ git clone https://github.com/Kloom89/harvis
 cd harvis
 python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
+.venv\Scripts\python.exe doctor.py
 kloom.cmd
 ```
 
 Decí **"Harvis"** — te contesta y ahí hablás. O le hacés clic a la cápsula y
 escribís.
+
+`doctor.py` es el chequeo previo: mira Python, los paquetes, el micrófono, la
+GPU y cuáles cerebros tienen credencial de verdad, y te imprime el comando
+exacto para arreglar lo que falte. **Corrélo antes de arrancar, y de nuevo cada
+vez que algo no ande.**
 
 **Requisitos:** Windows 11 · Python 3.12+ · un micrófono · GPU NVIDIA
 recomendada (Whisper large-v3; si no hay, cae a CPU/medium) · por lo menos un

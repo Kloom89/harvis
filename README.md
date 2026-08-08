@@ -113,10 +113,16 @@ git clone https://github.com/Kloom89/harvis
 cd harvis
 python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
+.venv\Scripts\python.exe doctor.py
 kloom.cmd
 ```
 
 Say **"Harvis"** — it answers, then you talk. Or click the capsule and type.
+
+`doctor.py` is the preflight: it checks Python, the packages, your mic, the GPU
+and which brains actually have credentials, and prints the exact command to fix
+whatever is missing. **Run it first, and run it again whenever something
+doesn't work.**
 
 **Requirements:** Windows 11 · Python 3.12+ · a microphone · an NVIDIA GPU
 recommended (Whisper large-v3; falls back to CPU/medium) · at least one LLM.
