@@ -202,7 +202,7 @@ async def WATCHER(avisar, cfg):     # opcional: loop de fondo
     await avisar("Señor, pasó algo.")
 ```
 
-Se instala desde el HUD (**⚙ SKILLS → ＋ Instalar skill**) y se carga en
+Se instala desde el HUD (**⚙ AJUSTES → Skills instaladas → ＋ Instalar skill**) y se carga en
 caliente, sin reiniciar. **Los pull requests con skills nuevas son más que
 bienvenidos**; para eso está publicado esto.
 

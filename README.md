@@ -194,7 +194,7 @@ async def WATCHER(avisar, cfg):     # optional: background loop
     await avisar("Sir, something happened.")
 ```
 
-Install it from the HUD (**⚙ SKILLS → ＋ Install skill**) — it hot-reloads, no
+Install it from the HUD (**⚙ AJUSTES → Skills instaladas → ＋ Install skill**) — it hot-reloads, no
 restart. **Pull requests with new skills are very welcome**; that's the whole
 point of publishing this.
 

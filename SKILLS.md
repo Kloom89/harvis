@@ -2,7 +2,7 @@
 
 A skill is **one Python file** dropped into `skills/`. HARVIS loads every
 `*.py` there at boot (files starting with `_` are ignored), and users can
-install yours live from the HUD (**SKILLS → ＋ Instalar skill**) — no
+install yours live from the HUD (**AJUSTES → Skills instaladas → ＋ Instalar skill**) — no
 restart needed.
 
 A skill can export any combination of four things:

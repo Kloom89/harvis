@@ -272,15 +272,33 @@ h1:hover #marca { text-decoration: underline; }
   border-color: var(--cyan-dim);
   box-shadow: 0 0 8px rgba(53, 214, 255, .18); }
 
-/* ---------- vista skills ---------- */
-#skills-view { display: none; flex: 1; overflow-y: auto; padding: 10px 14px;
+/* ---------- vista ajustes ---------- */
+#skills-view { display: none; flex: 1; overflow-y: auto; padding: 12px 14px 0;
   font-size: 12px; }
+#skills-view::-webkit-scrollbar { width: 4px; }
+#skills-view::-webkit-scrollbar-thumb { background: var(--line); }
 body.skills #skills-view { display: block; }
 body.skills #log, body.skills #timers, body.skills #brains,
 body.skills #entrada { display: none !important; }
-#skills-view h2 { font-size: 11px; letter-spacing: 2px; color: var(--cyan);
-  text-transform: uppercase; margin: 14px 0 6px; }
-#skills-view label { display: block; color: var(--muted); margin: 8px 0 3px; }
+/* Cada tema es una tarjeta colapsable (details nativo): el primer vistazo
+   muestra 4 títulos con su estado actual, no 30 inputs de corrido. */
+.sec { border: 1px solid var(--line); border-radius: 12px;
+  margin-bottom: 10px; background: rgba(10, 25, 38, .45); overflow: hidden; }
+.sec summary { list-style: none; cursor: pointer; padding: 11px 13px;
+  font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase;
+  color: var(--cyan); display: flex; align-items: center; gap: 8px; }
+.sec summary::-webkit-details-marker { display: none; }
+.sec summary::before { content: '▸'; color: var(--muted); flex: none;
+  transition: transform .25s ease; }
+.sec[open] summary::before { transform: rotate(90deg); }
+.sum-hint { margin-left: auto; font-size: 10px; letter-spacing: .3px;
+  text-transform: none; color: var(--muted); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+.sec-body { padding: 0 13px 12px;
+  border-top: 1px solid rgba(53, 214, 255, .08); }
+.desc { color: var(--muted); font-size: 11px; line-height: 1.5;
+  margin: 9px 0 2px; }
+#skills-view label { display: block; color: var(--muted); margin: 9px 0 3px; }
 #skills-view input, #skills-view textarea { width: 100%;
   background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
   color: var(--text); padding: 6px 9px; font-size: 12px; outline: none;
@@ -301,29 +319,27 @@ body.skills #entrada { display: none !important; }
   margin: 0; color: var(--text); cursor: pointer; font-size: 11.5px; }
 #skills-view #sk-brief-hora { width: 110px; }
 .sk-item { border: 1px solid var(--line); border-radius: 10px;
-  padding: 8px 10px; margin: 6px 0; }
+  padding: 8px 10px; margin: 8px 0 0; }
 .sk-item b { color: var(--text); }
 .sk-item .t { color: var(--muted); font-size: 11px; }
-#sk-save { margin-top: 12px; width: 100%; padding: 9px 0;
+/* Footer pegajoso: Guardar siempre a la vista, sin buscarlo al fondo. */
+#sk-foot { position: sticky; bottom: 0; margin: 0 -14px;
+  padding: 14px 14px 10px; display: flex; gap: 8px; align-items: center;
+  background: linear-gradient(180deg, rgba(5, 11, 18, 0), var(--bg) 22%); }
+#sk-save { flex: 1; padding: 9px 0;
   background: linear-gradient(135deg, #1691bd, #35d6ff); color: #04222e;
   border: 0; border-radius: 10px; font-weight: 600; cursor: pointer; }
-#sk-status { color: var(--green); padding: 6px 0; min-height: 18px; }
-.sk-accion { margin-top: 8px; width: 100%; padding: 8px 0;
+#sk-save:hover { box-shadow: 0 0 12px rgba(53, 214, 255, .45); }
+#sk-volver { flex: none; padding: 9px 12px; background: none;
+  border: 1px solid var(--line); color: var(--muted); border-radius: 10px;
+  cursor: pointer; font-size: 12px; }
+#sk-volver:hover { color: var(--text); border-color: var(--cyan-dim); }
+#sk-status { color: var(--green); font-size: 11px; min-height: 16px;
+  padding: 0 2px 8px; }
+.sk-accion { margin-top: 10px; width: 100%; padding: 8px 0;
   background: none; border: 1px dashed var(--cyan-dim); color: var(--cyan);
   border-radius: 10px; cursor: pointer; font-size: 12px; }
 .sk-accion:hover { border-style: solid; }
-.sk-salir { border: 1px solid var(--line); color: var(--muted); }
-.ayuda { display: inline-flex; align-items: center; justify-content: center;
-  width: 15px; height: 15px; border-radius: 50%; margin-left: 6px;
-  border: 1px solid var(--cyan-dim); color: var(--cyan); font-size: 10px;
-  cursor: help; position: relative; vertical-align: middle;
-  letter-spacing: 0; text-transform: none; }
-.ayuda:hover::after { content: attr(data-tip); position: absolute;
-  left: 0; top: 20px; width: 240px; z-index: 10; white-space: normal;
-  background: var(--panel); border: 1px solid var(--cyan-dim);
-  border-radius: 10px; padding: 9px 11px; color: var(--text);
-  font-size: 11px; line-height: 1.5; font-weight: 400;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, .6); }
 /* Línea de estado con punto de actividad: el usuario SIEMPRE sabe qué
    está pasando ("pensando…", "Leyendo Teams…", "hablando"). */
 #estado-line { font-size: 11px; color: var(--muted); padding: 7px 14px 0;
@@ -402,7 +418,8 @@ body.error #estado-line::before { background: #ff5c5c; }
   <header class="pywebview-drag-region">
     <div id="mini-orb" onclick="pywebview.api.toggle()" title="Achicar"></div>
     <h1 onclick="pywebview.api.abrir_web()" title="KloomStudio.com.ar"><span id="app-name">HARVIS</span><span id="marca">by KloomStudio.com.ar</span></h1>
-    <button id="skills-btn" onclick="toggleSkills()">SKILLS</button>
+    <button id="skills-btn" onclick="toggleSkills()"
+            title="Nombre, comandos de voz, briefing y skills">AJUSTES</button>
   </header>
   <div id="estado-line">esperando «Harvis…»</div>
   <div id="skills-view"></div>
@@ -503,7 +520,9 @@ const hud = {
   },
   brains(list) {
     const c = document.getElementById('brains');
-    c.innerHTML = '<span id="brains-label">Brain:</span>';
+    c.innerHTML = '<span id="brains-label" title="El modelo de IA que ' +
+      'piensa las respuestas. Cambialo cuando quieras: la conversación ' +
+      'sigue donde estaba.">Cerebro</span>';
     const s = document.createElement('select');
     s.id = 'brain-sel';
     list.forEach(b => { const o = document.createElement('option');
@@ -562,28 +581,42 @@ async function toggleSkills() {
   if (!b.classList.contains('skills')) return;
   const d = await pywebview.api.get_skills_data();
   const v = document.getElementById('skills-view');
-  const TIP_WAKE = 'El wake word es el nombre que despierta al asistente: ' +
-    'lo decís y lo que sigue es el comando (al principio o al final de la ' +
-    'frase). Acá podés cambiarlo — en cualquier idioma — y sumar variantes ' +
-    'que el reconocedor de voz suele escribir mal (harvey, harry...). ' +
-    'Cambiar el nombre renombra la app entera.';
-  let h = `<h2>Wake word <span class="ayuda" data-tip="${TIP_WAKE}">?</span></h2>` +
-    '<label>Nombre para llamarlo (ej: harvis, jarvis, hoover)</label>' +
+  // Tarjeta colapsable: título + estado actual a la derecha + descripción
+  // en una línea adentro. Solo la primera viene abierta.
+  const sec = (titulo, hint, desc, cuerpo, abierta) =>
+    `<details class="sec"${abierta ? ' open' : ''}><summary>${titulo}` +
+    `<span class="sum-hint">${hint}</span></summary>` +
+    `<div class="sec-body"><p class="desc">${desc}</p>${cuerpo}</div></details>`;
+
+  let h = sec('Nombre', `«${d.wake.word || 'harvis'}»`,
+    'Decís este nombre y lo que sigue es el comando. Cambialo por el que ' +
+    'quieras, en cualquier idioma: la app entera se renombra. Las variantes ' +
+    'son las palabras que el reconocedor suele escribir mal (harvey, ' +
+    'harry…) y también lo despiertan.',
+    '<label>Nombre para llamarlo</label>' +
     `<input id="sk-word" value="${d.wake.word || ''}">` +
     '<label>Variantes aceptadas (separadas por coma)</label>' +
-    `<input id="sk-aliases" value="${(d.wake.aliases || []).join(', ')}">` +
-    '<h2>Comandos de voz</h2>';
+    `<input id="sk-aliases" value="${(d.wake.aliases || []).join(', ')}">`,
+    true);
+
+  let cmds = '';
   for (const [k, titulo] of Object.entries(GRUPOS)) {
-    h += `<label>${titulo}</label>` +
+    cmds += `<label>${titulo}</label>` +
       `<textarea id="sk-${k}" rows="2">${(d.comandos[k] || []).join(', ')}</textarea>`;
   }
-  const TIP_BRIEF = 'El parte de la mañana: clima, pendientes y Teams sin ' +
-    'leer. Viene apagado — prendelo, elegí a qué hora y qué días. Con ' +
-    '"feriados no" se calla los feriados nacionales de Argentina.';
+  h += sec('Comandos de voz', 'frases que activan los modos',
+    'Las frases que activan cada modo. Están las de fábrica: agregá las ' +
+    'tuyas separadas por coma, con las palabras que usás vos.', cmds);
+
   const br = d.briefing || {};
   const bd = br.dias || [0, 1, 2, 3, 4];
   const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-  h += `<h2>Briefing matinal <span class="ayuda" data-tip="${TIP_BRIEF}">?</span></h2>` +
+  h += sec('Briefing matinal',
+    br.activo ? `${br.hora || '09:00'} · ${bd.length === 7
+      ? 'todos los días' : bd.length + ' días'}` : 'apagado',
+    'El parte de la mañana por voz: clima, pendientes y Teams sin leer ' +
+    'nada. Elegí hora y días; «feriados no» lo calla los feriados de ' +
+    'Argentina.',
     `<label class="sk-check"><input type="checkbox" id="sk-brief-activo"` +
     `${br.activo ? ' checked' : ''}><span>Activado</span></label>` +
     '<label>Hora</label>' +
@@ -593,20 +626,24 @@ async function toggleSkills() {
       `value="${i}"${bd.includes(i) ? ' checked' : ''}>${n}</label>`).join('') +
     '</div>' +
     `<label class="sk-check"><input type="checkbox" id="sk-brief-feriados"` +
-    `${br.saltar_feriados ? ' checked' : ''}><span>Feriados no</span></label>`;
-  h += '<button id="sk-save" onclick="guardarSkills()">Guardar y aplicar</button>' +
-    '<div id="sk-status"></div><h2>Skills instaladas</h2>';
-  for (const s of (d.skills || [])) {
-    h += `<div class="sk-item"><b>${s.nombre}</b><br>` +
+    `${br.saltar_feriados ? ' checked' : ''}><span>Feriados no</span></label>`);
+
+  const sks = d.skills || [];
+  h += sec('Skills instaladas', `${sks.length}`,
+    'Cada skill es un archivo .py que le enseña un truco nuevo: sus tools ' +
+    'quedan disponibles para cualquier cerebro al instante, sin reiniciar.',
+    sks.map(s => `<div class="sk-item"><b>${s.nombre}</b><br>` +
       `<span class="t">${s.desc}</span><br>` +
-      `<span class="t">tools: ${s.tools.join(', ')}</span></div>`;
-  }
-  h += '<button class="sk-accion" onclick="instalarSkill()">＋ Instalar skill…</button>' +
-    '<div class="t" style="color:var(--muted);padding:6px 0">Una skill es ' +
-    'un archivo .py con sus TOOLS (mirá los de la carpeta skills/ como ' +
-    'ejemplo). Al instalarla se carga al instante.</div>' +
-    '<button class="sk-accion sk-salir" onclick="toggleSkills()">← Salir</button>';
+      `<span class="t">tools: ${s.tools.join(', ')}</span></div>`).join('') +
+    '<button class="sk-accion" onclick="instalarSkill()">＋ Instalar skill…</button>');
+
+  h += '<div id="sk-status"></div>' +
+    '<div id="sk-foot">' +
+    '<button id="sk-volver" onclick="toggleSkills()">← Volver</button>' +
+    '<button id="sk-save" onclick="guardarSkills()">Guardar y aplicar</button>' +
+    '</div>';
   v.innerHTML = h;
+  v.scrollTop = 0;
 }
 async function instalarSkill() {
   document.getElementById('sk-status').textContent = 'Eligiendo archivo…';
