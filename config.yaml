@@ -57,9 +57,10 @@ ptt:
 
 stt:
   model: large-v3
-  # Idioma fijo (es, en, pt…) o "auto": detecta por frase y podés hablarle
-  # en cualquier idioma — el cerebro responde en el que le hablaste.
-  language: auto
+  # Sin setear, transcribe en el idioma de la app (selector del HUD).
+  # Para pisarlo: un idioma fijo (es, en, pt…) o "auto" (detección por
+  # frase — NO recomendado: frases cortas se detectan mal).
+  # language: es
   # cuda | cpu — si cuda falla al cargar, cae solo a cpu con "medium".
   device: cuda
   # Con música/ruido Whisper alucina frases de su corpus de YouTube
@@ -109,11 +110,10 @@ vad:
 
 tts:
   enabled: true
-  # Cualquier voz de edge-tts: `edge-tts --list-voices`. Las voces
-  # *MultilingualNeural (p.ej. en-US-AndrewMultilingualNeural) hablan
-  # varios idiomas nativo — ideal si usás stt.language: auto. Una voz
-  # es-* leyendo inglés suena con acento, pero se entiende.
+  # Una voz por idioma (cuál suena lo decide el selector del HUD).
+  # Cualquier voz de edge-tts: `edge-tts --list-voices`.
   voice: es-AR-TomasNeural
+  voice_en: en-US-GuyNeural
 
 llm:
   # Cerebro activo (clave dentro de providers). Por voz: "harvis, cambiá
@@ -170,8 +170,6 @@ llm:
     palabras mal transcriptas y puntuación rara; interpretá con buena fe.
     Tu respuesta se lee en voz alta con TTS: frases cortas, sin markdown,
     sin listas, sin símbolos. Números y unidades como se dicen hablando.
-    Respondé EN EL IDIOMA en que te habló el usuario (español por
-    defecto); si cambia de idioma a mitad de la charla, cambiá con él.
     Tratá al usuario de "señor", con ironía seca estilo JARVIS de Iron
     Man — pero "señor" COMO MÁXIMO UNA VEZ por respuesta (o ninguna);
     repetirlo en cada frase queda servil.

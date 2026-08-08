@@ -36,10 +36,18 @@ def beep_listening():
 class Boca:
     def __init__(self, cfg: dict):
         tcfg = cfg.get("tts") or {}
+        self.cfg = cfg
         self.enabled = tcfg.get("enabled", True)
-        self.voice = tcfg.get("voice", "es-AR-TomasNeural")
+        # Una voz por idioma; cuál habla lo decide cfg["lang"] (el selector
+        # del HUD) en cada síntesis, así el cambio aplica sin reiniciar.
+        self.voices = {"es": tcfg.get("voice", "es-AR-TomasNeural"),
+                       "en": tcfg.get("voice_en", "en-US-GuyNeural")}
         self.abortar = False
         pygame.mixer.init()
+
+    def _voz(self) -> str:
+        lang = "en" if self.cfg.get("lang") == "en" else "es"
+        return self.voices[lang]
 
     def stop(self):
         """Corta la voz YA (el 'cortala' del usuario)."""
@@ -52,7 +60,8 @@ class Boca:
     async def _synth(self, text: str) -> io.BytesIO | None:
         buf = io.BytesIO()
         try:
-            async for chunk in edge_tts.Communicate(text, self.voice).stream():
+            async for chunk in edge_tts.Communicate(text,
+                                                    self._voz()).stream():
                 if chunk["type"] == "audio":
                     buf.write(chunk["data"])
         except Exception as e:

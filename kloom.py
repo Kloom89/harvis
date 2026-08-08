@@ -188,8 +188,9 @@ def load_config(path="config.yaml") -> dict:
                     cfg["wake"]["pattern"] = None
             if ov.get("briefing"):
                 cfg.setdefault("briefing", {}).update(ov["briefing"])
-            if ov.get("hud_lang") in ("es", "en"):
-                cfg["hud_lang"] = ov["hud_lang"]
+            # "hud_lang" es el nombre viejo (cuando solo movía la interfaz)
+            if ov.get("lang", ov.get("hud_lang")) in ("es", "en"):
+                cfg["lang"] = ov.get("lang", ov.get("hud_lang"))
     except Exception:
         log.exception("comandos.yaml ilegible, sigo con defaults")
     aplicar_comandos(cfg)
@@ -239,9 +240,9 @@ def guardar_comandos(cfg: dict, payload: dict) -> str:
                           "saltar_feriados": bool(b.get("saltar_feriados"))}
         # la skill relee cfg["briefing"] en cada vuelta: aplica sin reiniciar
         cfg.setdefault("briefing", {}).update(ov["briefing"])
-    if payload.get("hud_lang") in ("es", "en"):
-        ov["hud_lang"] = payload["hud_lang"]
-        cfg["hud_lang"] = payload["hud_lang"]
+    if payload.get("lang") in ("es", "en"):
+        ov["lang"] = payload["lang"]
+        cfg["lang"] = payload["lang"]
     # merge sobre lo ya guardado: un payload parcial no puede pisar los
     # overrides que no trae (antes el dump reescribía el archivo entero)
     previos = {}
@@ -256,7 +257,7 @@ def guardar_comandos(cfg: dict, payload: dict) -> str:
         yaml.safe_dump(previos, f, allow_unicode=True, sort_keys=False)
     aplicar_comandos(cfg)
     log.info("comandos actualizados desde el HUD: %s", list(ov))
-    return ("Saved and applied." if cfg.get("hud_lang") == "en"
+    return ("Saved and applied." if cfg.get("lang") == "en"
             else "Guardado y aplicado.")
 
 
@@ -507,8 +508,14 @@ async def main():
         providers = list((cfg.get("llm", {}).get("providers") or {}))
         def _save_desde_hud(payload):
             word_antes = (cfg.get("wake") or {}).get("word", "harvis")
+            lang_antes = cfg.get("lang")
             r = guardar_comandos(cfg, payload)
             word_ahora = (cfg.get("wake") or {}).get("word", "harvis")
+            if cfg.get("lang") != lang_antes:
+                # el sufijo de idioma del prompt vive en el cerebro: se
+                # recrea por el mismo camino que la instalación de skills
+                loop.call_soon_threadsafe(
+                    oido.queue.put_nowait, ("reload_skills", None))
             if word_ahora != word_antes:
                 nombre = word_ahora.capitalize()
                 cfg["display_name"] = nombre
@@ -519,7 +526,7 @@ async def main():
                 loop.call_soon_threadsafe(
                     oido.queue.put_nowait, ("reload_skills", None))
                 r += (f" I'm called {nombre} now."
-                      if cfg.get("hud_lang") == "en"
+                      if cfg.get("lang") == "en"
                       else f" Ahora me llamo {nombre}.")
             return r
 
@@ -528,7 +535,7 @@ async def main():
                              "aliases": cfg.get("wake", {}).get("aliases", [])},
                     "comandos": cfg.get("comandos", {}),
                     "briefing": cfg.get("briefing", {}),
-                    "hud_lang": cfg.get("hud_lang"),
+                    "lang": cfg.get("lang"),
                     "skills": skills_info}
 
         hud = Hud(cfg, loop,
@@ -576,7 +583,7 @@ async def main():
     ]
 
     def _mostrar_actividad(nombre):
-        en = cfg.get("hud_lang") == "en"
+        en = cfg.get("lang") == "en"
         for pref, texto_es, texto_en in _ACTIVIDAD:
             if pref in nombre:
                 hud.actividad(texto_en if en else texto_es)

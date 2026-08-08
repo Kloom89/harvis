@@ -55,6 +55,16 @@ def crear_cerebro(cfg: dict, tools: list[Tool], brain: str | None = None):
     pcfg = (lcfg.get("providers") or {}).get(brain)
     if not pcfg:
         raise ValueError(f"Proveedor '{brain}' no está en llm.providers")
+    # El idioma lo manda el AJUSTE (cfg["lang"]), no el idioma en que llegó
+    # el comando: en 'en' responde siempre en inglés, en 'es' siempre en
+    # español. Copia superficial para no acumular sufijos en el cfg vivo.
+    sufijo = ("\nAnswer ALWAYS in English, even if the command arrives in "
+              "another language." if cfg.get("lang") == "en" else
+              "\nRespondé SIEMPRE en español, aunque el comando llegue en "
+              "otro idioma.")
+    cfg = {**cfg, "llm": {**lcfg,
+                          "system_prompt": lcfg.get("system_prompt", "")
+                          + sufijo}}
     if pcfg.get("driver") == "sdk":
         return CerebroClaude(cfg, pcfg, tools)
     from cerebro_jarvis import CerebroJarvis

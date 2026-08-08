@@ -26,10 +26,12 @@ SAMPLE_RATE = 16000
 class Stt:
     def __init__(self, cfg: dict):
         scfg = cfg.get("stt") or {}
-        # "auto" → language=None: Whisper detecta el idioma por frase y
-        # transcribe inglés como inglés (con "es" fijo lo destroza).
-        lang = str(scfg.get("language", "es")).strip().lower()
-        self.language = None if lang in ("auto", "none", "") else lang
+        self.cfg = cfg
+        # Sin stt.language explícito, Whisper transcribe en el idioma de la
+        # app (cfg["lang"], el selector del HUD) — se resuelve POR LLAMADA
+        # así el cambio de idioma aplica sin reiniciar. Un stt.language
+        # fijo (es, en, pt…) lo pisa; "auto" deja detectar a Whisper.
+        self.language = str(scfg.get("language", "")).strip().lower() or None
         self.no_speech_max = float(scfg.get("no_speech_max", 0.6))
         self.logprob_min = float(scfg.get("logprob_min", -1.0))
         self.hotwords = scfg.get("hotwords", "Jarvis")
@@ -74,11 +76,18 @@ class Stt:
         else:
             self.model = WhisperModel(model, device="cpu", compute_type="int8")
 
+    def _idioma(self) -> str | None:
+        if self.language == "auto":
+            return None
+        if self.language:
+            return self.language
+        return "en" if self.cfg.get("lang") == "en" else "es"
+
     def warm_up(self) -> None:
         # El primer transcribe tras cargar compila kernels (puede tardar
         # ~1 min la primerísima vez); hacerlo acá y no cuando el usuario habla.
         segs, _ = self.model.transcribe(np.zeros(SAMPLE_RATE, np.float32),
-                                        language=self.language, beam_size=1)
+                                        language=self._idioma(), beam_size=1)
         list(segs)
 
     def transcribe(self, audio) -> str:
@@ -96,7 +105,7 @@ class Stt:
         # Un fallo de Whisper (CUDA OOM cuando la GPU está exigida) NO puede
         # matar a HARVIS: reintento corto y si no, se descarta la frase.
         def _correr():
-            s, _ = self.model.transcribe(audio, language=self.language,
+            s, _ = self.model.transcribe(audio, language=self._idioma(),
                                          beam_size=1, vad_filter=True,
                                          hotwords=self.hotwords)
             return list(s)   # materializa: los errores saltan ACÁ, no después

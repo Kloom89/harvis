@@ -45,9 +45,9 @@ _PROMOS_DATA = [
 
 
 def _hud_lang(cfg: dict) -> str:
-    """Idioma de la INTERFAZ (no del asistente): lo guardado en config, o
+    """Idioma de la app (interfaz + oído + voz): lo guardado en config, o
     el del Windows del usuario la primera vez."""
-    lang = (cfg or {}).get("hud_lang")
+    lang = (cfg or {}).get("lang")
     if lang in ("es", "en"):
         return lang
     import locale
@@ -482,9 +482,9 @@ body.error #estado-line::before { background: #ff5c5c; }
 <script>
 let NOMBRE = 'Harvis';
 let LANG = '__LANG__';   // 'es' | 'en'; lo inyecta hud.py al arrancar
-// Todos los textos de la UI en un solo lugar. El idioma se cambia en vivo
-// desde AJUSTES y se persiste como hud_lang. Solo la INTERFAZ: el idioma
-// en que habla/escucha el asistente vive en config (stt, tts, prompt).
+// Todos los textos de la UI en un solo lugar. El selector de AJUSTES
+// cambia el idioma de TODA la app (interfaz + en qué idioma escucha y
+// responde el asistente) y se persiste como "lang".
 const I18N = {
 es: {
   estados: {
@@ -516,6 +516,8 @@ es: {
   tipEnviar: 'Enviar', tipOrb: 'Abrir panel', tipMiniOrb: 'Achicar',
   tipOrbMute: 'Privacidad: apagar/prender el micrófono',
   idioma: 'Idioma / Language',
+  tipIdioma: 'Cambia toda la app: la interfaz y el idioma en que ' +
+    'te escucha y te responde.',
   secNombre: 'Nombre',
   descNombre: 'Decís este nombre y lo que sigue es el comando. Cambialo ' +
     'por el que quieras, en cualquier idioma: la app entera se renombra. ' +
@@ -572,6 +574,8 @@ en: {
   tipEnviar: 'Send', tipOrb: 'Open panel', tipMiniOrb: 'Minimize',
   tipOrbMute: 'Privacy: turn the microphone off/on',
   idioma: 'Idioma / Language',
+  tipIdioma: 'Switches the whole app: the interface and the language ' +
+    'it listens and answers in.',
   secNombre: 'Name',
   descNombre: 'Say this name and whatever follows is the command. Change ' +
     'it to anything, in any language: the whole app renames itself. ' +
@@ -733,7 +737,7 @@ function cambiarIdioma(v) {
   LANG = v;
   aplicarIdioma();
   if (SK_DATA) renderSkills(SK_DATA);
-  guardarSkills();          // persiste hud_lang junto con lo demás
+  guardarSkills();          // persiste lang junto con lo demás
 }
 async function toggleSkills() {
   const b = document.body;
@@ -752,7 +756,8 @@ function renderSkills(d) {
     `<span class="sum-hint">${hint}</span></summary>` +
     `<div class="sec-body"><p class="desc">${desc}</p>${cuerpo}</div></details>`;
 
-  let h = `<div id="sk-lang"><label>${t.idioma}</label>` +
+  let h = `<div id="sk-lang" title="${t.tipIdioma}">` +
+    `<label>${t.idioma}</label>` +
     '<select onchange="cambiarIdioma(this.value)">' +
     `<option value="es"${LANG === 'en' ? '' : ' selected'}>Español</option>` +
     `<option value="en"${LANG === 'en' ? ' selected' : ''}>English</option>` +
@@ -819,7 +824,7 @@ async function guardarSkills() {
   const lista = id => document.getElementById(id).value
     .split(',').map(x => x.trim()).filter(Boolean);
   const payload = {
-    hud_lang: LANG,
+    lang: LANG,
     wake: { word: document.getElementById('sk-word').value.trim(),
             aliases: lista('sk-aliases') },
     comandos: {},
@@ -956,7 +961,7 @@ class Hud:
         import shutil
 
         import webview
-        en = (self.cfg or {}).get("hud_lang") == "en"
+        en = (self.cfg or {}).get("lang") == "en"
         try:
             rutas = self.window.create_file_dialog(
                 webview.OPEN_DIALOG,
