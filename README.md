@@ -265,9 +265,11 @@ issues.
   <a href="https://github.com/sponsors/Kloom89"><img alt="Sponsor HARVIS" src="https://img.shields.io/badge/sponsor-HARVIS-ff5f8f?style=for-the-badge&logo=githubsponsors&logoColor=white"></a>
 </p>
 
-Sponsors get their name in this section and their issues looked at first — and
-from $250/month, the **commercial-use license** the standard one doesn't grant
-(see [License](#license--personal-use-not-for-sale)).
+Sponsors get their name in this section and their issues looked at first.
+
+**Using HARVIS for work?** The standard license doesn't cover that. The
+$50/month tier licenses commercial use on your own machine; $250 and $1,000
+cover a team (see [License](#license--personal-use-not-for-sale)).
 
 *No sponsors yet. Yours would be the first one here.*
 

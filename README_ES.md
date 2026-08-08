@@ -273,9 +273,11 @@ aparece con un problema.
   <a href="https://github.com/sponsors/Kloom89"><img alt="Sponsor HARVIS" src="https://img.shields.io/badge/sponsor-HARVIS-ff5f8f?style=for-the-badge&logo=githubsponsors&logoColor=white"></a>
 </p>
 
-Los sponsors van con su nombre en esta sección y sus issues se miran primero — y
-desde 250 USD por mes, incluye la **licencia de uso comercial** que la estándar
-no da (mirá la [licencia](#licencia--uso-personal-no-se-vende)).
+Los sponsors van con su nombre en esta sección y sus issues se miran primero.
+
+**¿Lo usás para trabajar?** La licencia estándar no cubre eso. El tier de 50 USD
+por mes licencia el uso comercial en tu propia máquina; los de 250 y 1.000
+cubren un equipo (mirá la [licencia](#licencia--uso-personal-no-se-vende)).
 
 *Todavía no hay ninguno. El tuyo sería el primero acá.*
 
