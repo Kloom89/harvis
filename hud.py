@@ -298,19 +298,17 @@ h1:hover #marca { text-decoration: underline; }
 #marca { font-size: 10px; letter-spacing: 1.2px; color: #7de4ff;
   font-weight: 700; white-space: nowrap;
   text-shadow: 0 0 8px rgba(53, 214, 255, .55); }
-/* Botones de ícono del header: los PNG vienen con fondo oscuro propio,
-   así que van recortados en un botón redondeado, sin transparencia. */
-.icon-btn { width: 32px; height: 32px; flex: none; padding: 0;
-  border: 1px solid rgba(53, 214, 255, .18); border-radius: 9px;
-  overflow: hidden; background: #060f18; cursor: pointer;
-  transition: border-color .25s ease, box-shadow .25s ease,
-    transform .25s ease; }
-.icon-btn img { width: 100%; height: 100%; object-fit: cover;
+/* Botones de ícono del header: PNG transparentes que flotan solos —
+   sin caja, el glow lo trae el propio dibujo. */
+.icon-btn { width: 30px; height: 30px; flex: none; padding: 0;
+  border: 0; background: none; cursor: pointer;
+  transition: filter .25s ease, transform .25s ease; }
+.icon-btn img { width: 100%; height: 100%; object-fit: contain;
   display: block; }
-.icon-btn:hover { border-color: var(--cyan-dim);
-  box-shadow: 0 0 10px rgba(53, 214, 255, .3); transform: scale(1.06); }
+.icon-btn:hover { transform: scale(1.12);
+  filter: drop-shadow(0 0 6px rgba(53, 214, 255, .55)); }
 body.skills #skills-btn, body.tienda #tienda-btn {
-  border-color: var(--cyan); box-shadow: 0 0 10px rgba(53, 214, 255, .4); }
+  filter: drop-shadow(0 0 7px rgba(53, 214, 255, .75)); }
 
 /* ---------- vista ajustes ---------- */
 #skills-view { display: none; flex: 1; overflow-y: auto; padding: 12px 14px 0;
