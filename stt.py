@@ -26,7 +26,10 @@ SAMPLE_RATE = 16000
 class Stt:
     def __init__(self, cfg: dict):
         scfg = cfg.get("stt") or {}
-        self.language = scfg.get("language", "es")
+        # "auto" → language=None: Whisper detecta el idioma por frase y
+        # transcribe inglés como inglés (con "es" fijo lo destroza).
+        lang = str(scfg.get("language", "es")).strip().lower()
+        self.language = None if lang in ("auto", "none", "") else lang
         self.no_speech_max = float(scfg.get("no_speech_max", 0.6))
         self.logprob_min = float(scfg.get("logprob_min", -1.0))
         self.hotwords = scfg.get("hotwords", "Jarvis")
@@ -38,6 +41,10 @@ class Stt:
                 "gracias por ver el video", "gracias", "hasta la próxima",
                 "nos vemos en el próximo video",
                 "subtítulos realizados por la comunidad de amara.org",
+                # y las clásicas del corpus en inglés (modo auto)
+                "thank you for watching", "thanks for watching", "thank you",
+                "see you in the next video",
+                "subtitles by the amara.org community",
             ])}
         # Muletillas que Whisper inventa ante un soplido; nunca son un
         # comando por sí solas ("sí"/"no" NO están: son respuestas válidas).

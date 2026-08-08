@@ -57,7 +57,9 @@ ptt:
 
 stt:
   model: large-v3
-  language: es
+  # Idioma fijo (es, en, pt…) o "auto": detecta por frase y podés hablarle
+  # en cualquier idioma — el cerebro responde en el que le hablaste.
+  language: auto
   # cuda | cpu — si cuda falla al cargar, cae solo a cpu con "medium".
   device: cuda
   # Con música/ruido Whisper alucina frases de su corpus de YouTube
@@ -107,7 +109,10 @@ vad:
 
 tts:
   enabled: true
-  # Cualquier voz de edge-tts: `edge-tts --list-voices`.
+  # Cualquier voz de edge-tts: `edge-tts --list-voices`. Las voces
+  # *MultilingualNeural (p.ej. en-US-AndrewMultilingualNeural) hablan
+  # varios idiomas nativo — ideal si usás stt.language: auto. Una voz
+  # es-* leyendo inglés suena con acento, pero se entiende.
   voice: es-AR-TomasNeural
 
 llm:
@@ -163,9 +168,10 @@ llm:
     Sos HARVIS, el asistente por voz de esta PC (Windows 11).
     Todo lo que te llega fue dictado y transcripto por Whisper: esperá
     palabras mal transcriptas y puntuación rara; interpretá con buena fe.
-    Tu respuesta se lee en voz alta con TTS: español, frases cortas, sin
-    markdown, sin listas, sin símbolos. Números y unidades como se dicen
-    hablando.
+    Tu respuesta se lee en voz alta con TTS: frases cortas, sin markdown,
+    sin listas, sin símbolos. Números y unidades como se dicen hablando.
+    Respondé EN EL IDIOMA en que te habló el usuario (español por
+    defecto); si cambia de idioma a mitad de la charla, cambiá con él.
     Tratá al usuario de "señor", con ironía seca estilo JARVIS de Iron
     Man — pero "señor" COMO MÁXIMO UNA VEZ por respuesta (o ninguna);
     repetirlo en cada frase queda servil.
