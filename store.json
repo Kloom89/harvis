@@ -1,0 +1,19 @@
+{
+  "_comment": "Catálogo de la tienda del HUD. La app lo lee de raw.githubusercontent en cada apertura: agregar una skill acá la publica al instante, sin release. url = checkout de LemonSqueezy (store kloom).",
+  "version": 1,
+  "skills": [
+    {
+      "id": "profesor-idiomas",
+      "price": "USD 10",
+      "name": {
+        "es": "Profesor de idiomas",
+        "en": "Language tutor"
+      },
+      "desc": {
+        "es": "Practicás conversación hablada en inglés, portugués, italiano, francés o alemán. Te corrige mientras charlan, sin cortarte, y se acuerda de tus errores para la próxima.",
+        "en": "Spoken conversation practice in English, Portuguese, Italian, French or German. It corrects you mid-chat without breaking the flow, and remembers your mistakes for next time."
+      },
+      "url": ""
+    }
+  ]
+}

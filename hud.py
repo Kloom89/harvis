@@ -373,6 +373,11 @@ body.skills #entrada { display: none !important; }
   background: none; border: 1px dashed var(--cyan-dim); color: var(--cyan);
   border-radius: 10px; cursor: pointer; font-size: 12px; }
 .sk-accion:hover { border-style: solid; }
+.precio { float: right; color: var(--green); font-weight: 700;
+  font-size: 11px; }
+.sk-comprar { margin-top: 8px; padding: 6px 0; border-style: solid;
+  border-color: var(--cyan-dim); }
+.sk-comprar:hover { background: rgba(53, 214, 255, .1); }
 .sk-sponsor { border-color: #a8477a; color: #ff8fc4; }
 .sk-sponsor:hover { border-color: #db61a2;
   box-shadow: 0 0 10px rgba(219, 97, 162, .25); }
@@ -557,6 +562,12 @@ es: {
     'reiniciar.',
   btnInstalar: '＋ Instalar skill…', eligiendo: 'Eligiendo archivo…',
   btnGuardar: 'Guardar y aplicar', btnVolver: '← Volver',
+  secTienda: 'Tienda de skills', hintTienda: 'trucos nuevos',
+  descTienda: 'Skills que no vienen incluidas, cada una con su precio. Se ' +
+    'compran una vez y son tuyas. Después de comprarla te llega el archivo ' +
+    '.py y la instalás acá arriba, en Skills instaladas.',
+  tiendaVacia: 'No pude traer el catálogo. Fijate la conexión.',
+  btnComprar: 'Comprar',
   secApoyar: 'Apoyar el proyecto', hintApoyar: 'gratis para uso personal',
   descApoyar: 'HARVIS es gratis y va a seguir siéndolo. Lo que compra un ' +
     'sponsor son las horas que le entran: skills nuevas, menos asperezas, ' +
@@ -622,6 +633,12 @@ en: {
     'its tools become available to every brain instantly, no restart.',
   btnInstalar: '＋ Install skill…', eligiendo: 'Choosing file…',
   btnGuardar: 'Save & apply', btnVolver: '← Back',
+  secTienda: 'Skill store', hintTienda: 'new tricks',
+  descTienda: 'Skills that do not ship with HARVIS, each with its own ' +
+    'price. Buy once, yours to keep. After buying you get the .py file and ' +
+    'install it right above, under Installed skills.',
+  tiendaVacia: 'Could not fetch the catalogue. Check your connection.',
+  btnComprar: 'Buy',
   secApoyar: 'Support the project', hintApoyar: 'free for personal use',
   descApoyar: 'HARVIS is free and stays free. What sponsorship buys is ' +
     'time: hours that go into new skills, fewer rough edges, and ' +
@@ -833,6 +850,11 @@ function renderSkills(d) {
       `<span class="t">tools: ${s.tools.join(', ')}</span></div>`).join('') +
     `<button class="sk-accion" onclick="instalarSkill()">${t.btnInstalar}</button>`);
 
+  // El catálogo vive remoto (store.json del repo): sumar una skill la
+  // publica en todas las instalaciones sin sacar versión nueva.
+  h += sec(t.secTienda, t.hintTienda, t.descTienda,
+    '<div id="sk-tienda"></div>');
+
   h += sec(t.secApoyar, t.hintApoyar, t.descApoyar,
     `<p class="desc">${t.descTrabajo}</p>` +
     '<button class="sk-accion sk-sponsor" onclick="pywebview.api.abrir_url' +
@@ -845,6 +867,39 @@ function renderSkills(d) {
     '</div>';
   v.innerHTML = h;
   v.scrollTop = 0;
+  pintarTienda();
+}
+const STORE_URL = 'https://raw.githubusercontent.com/Kloom89/harvis/' +
+  'main/store.json';
+let STORE_CACHE = null;
+async function pintarTienda() {
+  const c = document.getElementById('sk-tienda');
+  if (!c) return;
+  const t = T();
+  try {
+    if (!STORE_CACHE) {
+      const r = await fetch(STORE_URL, {cache: 'no-store'});
+      STORE_CACHE = await r.json();
+    }
+  } catch (e) {
+    c.innerHTML = `<p class="desc">${t.tiendaVacia}</p>`;
+    return;
+  }
+  // Sin url de checkout la skill todavía no está a la venta. Si no queda
+  // ninguna, la tienda entera se esconde: una vitrina vacía es peor que
+  // no tener vitrina (y no es un error, así que no va el aviso de red).
+  const items = (STORE_CACHE.skills || []).filter(s => s.url);
+  if (!items.length) { c.closest('.sec').style.display = 'none'; return; }
+  c.innerHTML = items.map(s => {
+    const n = (s.name || {})[LANG] || (s.name || {}).en || s.id;
+    const d = (s.desc || {})[LANG] || (s.desc || {}).en || '';
+    const url = s.url + (s.url.includes('?') ? '&' : '?') +
+      'utm_source=harvis&utm_medium=hud_tienda&utm_campaign=' + s.id;
+    return `<div class="sk-item"><b>${n}</b> <span class="precio">` +
+      `${s.price || ''}</span><br><span class="t">${d}</span>` +
+      `<button class="sk-accion sk-comprar" onclick="pywebview.api.` +
+      `abrir_url('${url}')">${t.btnComprar}</button></div>`;
+  }).join('');
 }
 async function instalarSkill() {
   document.getElementById('sk-status').textContent = T().eligiendo;
