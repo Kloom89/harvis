@@ -375,6 +375,7 @@ body.skills #entrada { display: none !important; }
 .sk-accion:hover { border-style: solid; }
 .precio { float: right; color: var(--green); font-weight: 700;
   font-size: 11px; }
+.precio i { font-style: normal; font-weight: 400; color: var(--muted); }
 .sk-comprar { margin-top: 8px; padding: 6px 0; border-style: solid;
   border-color: var(--cyan-dim); }
 .sk-comprar:hover { background: rgba(53, 214, 255, .1); }
@@ -563,11 +564,11 @@ es: {
   btnInstalar: '＋ Instalar skill…', eligiendo: 'Eligiendo archivo…',
   btnGuardar: 'Guardar y aplicar', btnVolver: '← Volver',
   secTienda: 'Tienda de skills', hintTienda: 'trucos nuevos',
-  descTienda: 'Skills que no vienen incluidas, cada una con su precio. Se ' +
-    'compran una vez y son tuyas. Después de comprarla te llega el archivo ' +
-    '.py y la instalás acá arriba, en Skills instaladas.',
+  descTienda: 'Skills que no vienen incluidas, cada una con su precio: ' +
+    'unas se compran una vez y otras van por mes. Después de comprarla te ' +
+    'llega el archivo .py y la instalás acá arriba, en Skills instaladas.',
   tiendaVacia: 'No pude traer el catálogo. Fijate la conexión.',
-  btnComprar: 'Comprar',
+  btnComprar: 'Comprar', btnSuscribir: 'Suscribirme', porMes: ' / mes',
   secApoyar: 'Apoyar el proyecto', hintApoyar: 'gratis para uso personal',
   descApoyar: 'HARVIS es gratis y va a seguir siéndolo. Lo que compra un ' +
     'sponsor son las horas que le entran: skills nuevas, menos asperezas, ' +
@@ -635,10 +636,10 @@ en: {
   btnGuardar: 'Save & apply', btnVolver: '← Back',
   secTienda: 'Skill store', hintTienda: 'new tricks',
   descTienda: 'Skills that do not ship with HARVIS, each with its own ' +
-    'price. Buy once, yours to keep. After buying you get the .py file and ' +
-    'install it right above, under Installed skills.',
+    'price — some are a one-off, some are monthly. After buying you get ' +
+    'the .py file and install it right above, under Installed skills.',
   tiendaVacia: 'Could not fetch the catalogue. Check your connection.',
-  btnComprar: 'Buy',
+  btnComprar: 'Buy', btnSuscribir: 'Subscribe', porMes: ' / month',
   secApoyar: 'Support the project', hintApoyar: 'free for personal use',
   descApoyar: 'HARVIS is free and stays free. What sponsorship buys is ' +
     'time: hours that go into new skills, fewer rough edges, and ' +
@@ -895,10 +896,15 @@ async function pintarTienda() {
     const d = (s.desc || {})[LANG] || (s.desc || {}).en || '';
     const url = s.url + (s.url.includes('?') ? '&' : '?') +
       'utm_source=harvis&utm_medium=hud_tienda&utm_campaign=' + s.id;
+    // Una suscripción tiene que LEERSE como suscripción antes de comprar,
+    // no descubrirse en el resumen de la tarjeta.
+    const mensual = s.period === 'month';
+    const precio = (s.price || '') + (mensual ? `<i>${t.porMes}</i>` : '');
     return `<div class="sk-item"><b>${n}</b> <span class="precio">` +
-      `${s.price || ''}</span><br><span class="t">${d}</span>` +
+      `${precio}</span><br><span class="t">${d}</span>` +
       `<button class="sk-accion sk-comprar" onclick="pywebview.api.` +
-      `abrir_url('${url}')">${t.btnComprar}</button></div>`;
+      `abrir_url('${url}')">` +
+      `${mensual ? t.btnSuscribir : t.btnComprar}</button></div>`;
   }).join('');
 }
 async function instalarSkill() {

@@ -1,10 +1,11 @@
 {
-  "_comment": "Catálogo de la tienda del HUD. La app lo lee de raw.githubusercontent en cada apertura: agregar una skill acá la publica al instante, sin release. url = checkout de LemonSqueezy (store kloom).",
+  "_comment": "Catálogo de la tienda del HUD. La app lo lee de raw.githubusercontent en cada apertura: agregar una skill acá la publica al instante, sin release. url = checkout de LemonSqueezy (store kloom). period: 'month' = suscripción, ausente = compra única.",
   "version": 1,
   "skills": [
     {
       "id": "profesor-idiomas",
-      "price": "USD 10",
+      "price": "USD 5",
+      "period": "month",
       "name": {
         "es": "Profesor de idiomas",
         "en": "Language tutor"
