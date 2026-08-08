@@ -44,6 +44,20 @@ _PROMOS_DATA = [
 ]
 
 
+def _hud_lang(cfg: dict) -> str:
+    """Idioma de la INTERFAZ (no del asistente): lo guardado en config, o
+    el del Windows del usuario la primera vez."""
+    lang = (cfg or {}).get("hud_lang")
+    if lang in ("es", "en"):
+        return lang
+    import locale
+    try:
+        loc = str(locale.getlocale()[0] or "").lower()
+    except Exception:
+        loc = ""
+    return "es" if loc.startswith(("es", "spanish")) else "en"
+
+
 def _promos_json() -> str:
     out = []
     for slug, nombre, tag, cta, color, url in _PROMOS_DATA:
@@ -280,6 +294,14 @@ h1:hover #marca { text-decoration: underline; }
 body.skills #skills-view { display: block; }
 body.skills #log, body.skills #timers, body.skills #brains,
 body.skills #entrada { display: none !important; }
+#sk-lang { display: flex; align-items: center; gap: 8px;
+  margin: 0 0 10px; }
+#sk-lang label { margin: 0 !important; }
+#sk-lang select { background: var(--panel); color: var(--cyan);
+  border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px;
+  font-size: 11px; cursor: pointer; outline: none; }
+#sk-lang select:hover { border-color: var(--cyan-dim); }
+#sk-lang select option { background: #0a1d2e; color: var(--text); }
 /* Cada tema es una tarjeta colapsable (details nativo): el primer vistazo
    muestra 4 títulos con su estado actual, no 30 inputs de corrido. */
 .sec { border: 1px solid var(--line); border-radius: 12px;
@@ -459,13 +481,125 @@ body.error #estado-line::before { background: #ff5c5c; }
 
 <script>
 let NOMBRE = 'Harvis';
-const ESTADOS = {
-  idle: () => `esperando «${NOMBRE}…»`, armed: () => 'te escucho — seguí hablando',
-  thinking: () => 'pensando…', speaking: () => 'hablando',
-  chat: () => 'modo charla — decí «listo» para cortar',
-  muted: () => 'micrófono APAGADO — tocá el mic para prender',
-  error: () => 'uy, algo falló',
+let LANG = '__LANG__';   // 'es' | 'en'; lo inyecta hud.py al arrancar
+// Todos los textos de la UI en un solo lugar. El idioma se cambia en vivo
+// desde AJUSTES y se persiste como hud_lang. Solo la INTERFAZ: el idioma
+// en que habla/escucha el asistente vive en config (stt, tts, prompt).
+const I18N = {
+es: {
+  estados: {
+    idle: () => `esperando «${NOMBRE}…»`,
+    armed: () => 'te escucho — seguí hablando',
+    thinking: () => 'pensando…', speaking: () => 'hablando',
+    chat: () => 'modo charla — decí «listo» para cortar',
+    muted: () => 'micrófono APAGADO — tocá el mic para prender',
+    error: () => 'uy, algo falló',
+  },
+  grupos: {
+    charla: 'Modo charla (todo va al cerebro, sin wake word)',
+    redactor: 'Modo redactor (anota todo lo dictado)',
+    coach: 'Modo coach (coach ontológico confrontativo)',
+    privacidad: 'Modo privacidad (apaga el micrófono)',
+    salir: 'Salir de un modo (charla/redactor)',
+    reiniciar: 'Conversación nueva (borra el hilo actual)',
+  },
+  dias: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+  placeholder: n => `Escribile a ${n}…`,
+  btnAjustes: 'AJUSTES',
+  tipAjustes: 'Idioma, nombre, comandos de voz, briefing y skills',
+  cerebro: 'Cerebro',
+  tipCerebro: 'El modelo de IA que piensa las respuestas. Cambialo ' +
+    'cuando quieras: la conversación sigue donde estaba.',
+  tipMic: 'Micrófono on/off',
+  tipNueva: 'Conversación nueva (borra el hilo actual)',
+  tipStop: 'Cortala (F9): calla la voz y aborta el turno',
+  tipEnviar: 'Enviar', tipOrb: 'Abrir panel', tipMiniOrb: 'Achicar',
+  tipOrbMute: 'Privacidad: apagar/prender el micrófono',
+  idioma: 'Idioma / Language',
+  secNombre: 'Nombre',
+  descNombre: 'Decís este nombre y lo que sigue es el comando. Cambialo ' +
+    'por el que quieras, en cualquier idioma: la app entera se renombra. ' +
+    'Las variantes son las palabras que el reconocedor suele escribir mal ' +
+    '(harvey, harry…) y también lo despiertan.',
+  lblNombre: 'Nombre para llamarlo',
+  lblAliases: 'Variantes aceptadas (separadas por coma)',
+  secComandos: 'Comandos de voz',
+  hintComandos: 'frases que activan los modos',
+  descComandos: 'Las frases que activan cada modo. Están las de fábrica: ' +
+    'agregá las tuyas separadas por coma, con las palabras que usás vos.',
+  secBriefing: 'Briefing matinal',
+  descBriefing: 'El parte de la mañana por voz: clima, pendientes y Teams ' +
+    'sin leer nada. Elegí hora y días; «feriados no» lo calla los feriados ' +
+    'de Argentina.',
+  apagado: 'apagado', todosLosDias: 'todos los días',
+  nDias: n => `${n} días`,
+  lblActivado: 'Activado', lblHora: 'Hora', lblDias: 'Días',
+  lblFeriados: 'Feriados no',
+  secSkills: 'Skills instaladas',
+  descSkills: 'Cada skill es un archivo .py que le enseña un truco nuevo: ' +
+    'sus tools quedan disponibles para cualquier cerebro al instante, sin ' +
+    'reiniciar.',
+  btnInstalar: '＋ Instalar skill…', eligiendo: 'Eligiendo archivo…',
+  btnGuardar: 'Guardar y aplicar', btnVolver: '← Volver',
+},
+en: {
+  estados: {
+    idle: () => `waiting for “${NOMBRE}…”`,
+    armed: () => 'listening — keep talking',
+    thinking: () => 'thinking…', speaking: () => 'speaking',
+    chat: () => 'chat mode — say “listo” to end',
+    muted: () => 'microphone OFF — tap the mic to turn it on',
+    error: () => 'oops, something broke',
+  },
+  grupos: {
+    charla: 'Chat mode (everything goes to the brain, no wake word)',
+    redactor: 'Dictation mode (writes down everything you dictate)',
+    coach: 'Coach mode (confrontational ontological coach)',
+    privacidad: 'Privacy mode (turns the microphone off)',
+    salir: 'Exit a mode (chat/dictation)',
+    reiniciar: 'New conversation (clears the current thread)',
+  },
+  dias: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  placeholder: n => `Type to ${n}…`,
+  btnAjustes: 'SETTINGS',
+  tipAjustes: 'Language, name, voice commands, briefing and skills',
+  cerebro: 'Brain',
+  tipCerebro: 'The AI model that does the thinking. Switch anytime: the ' +
+    'conversation picks up where it was.',
+  tipMic: 'Microphone on/off',
+  tipNueva: 'New conversation (clears the thread)',
+  tipStop: 'Shut it up (F9): stops the voice and aborts the turn',
+  tipEnviar: 'Send', tipOrb: 'Open panel', tipMiniOrb: 'Minimize',
+  tipOrbMute: 'Privacy: turn the microphone off/on',
+  idioma: 'Idioma / Language',
+  secNombre: 'Name',
+  descNombre: 'Say this name and whatever follows is the command. Change ' +
+    'it to anything, in any language: the whole app renames itself. ' +
+    'Variants are the words the recognizer tends to write instead ' +
+    '(harvey, harry…) — they wake it too.',
+  lblNombre: 'Name to call it',
+  lblAliases: 'Accepted variants (comma-separated)',
+  secComandos: 'Voice commands',
+  hintComandos: 'phrases that trigger the modes',
+  descComandos: 'The phrases that trigger each mode. Factory defaults are ' +
+    'in: add your own, comma-separated, with the words you actually use.',
+  secBriefing: 'Morning briefing',
+  descBriefing: 'The morning report, spoken: weather, pending tasks and ' +
+    'Teams without reading a thing. Pick time and days; “skip holidays” ' +
+    'mutes it on Argentine national holidays.',
+  apagado: 'off', todosLosDias: 'every day',
+  nDias: n => `${n} days`,
+  lblActivado: 'Enabled', lblHora: 'Time', lblDias: 'Days',
+  lblFeriados: 'Skip holidays',
+  secSkills: 'Installed skills',
+  descSkills: 'Each skill is one .py file that teaches it a new trick: ' +
+    'its tools become available to every brain instantly, no restart.',
+  btnInstalar: '＋ Install skill…', eligiendo: 'Choosing file…',
+  btnGuardar: 'Save & apply', btnVolver: '← Back',
+},
 };
+const T = () => I18N[LANG] || I18N.es;
+if (!I18N[LANG]) LANG = 'es';
 let ESTADO_ACTUAL = 'idle';
 let BRAIN_ACTUAL = '';
 const hud = {
@@ -475,16 +609,17 @@ const hud = {
      'error'].forEach(c => b.classList.remove(c));
     b.classList.add(s);
     ESTADO_ACTUAL = s;
-    document.getElementById('estado-line').textContent =
-      ESTADOS[s] ? ESTADOS[s]() : s;
+    const E = T().estados;
+    document.getElementById('estado-line').textContent = E[s] ? E[s]() : s;
   },
   rename(n) {
     NOMBRE = n;
     document.getElementById('app-name').textContent = n.toUpperCase();
-    document.getElementById('cmd').placeholder = `Escribile a ${n}…`;
-    if (ESTADOS[ESTADO_ACTUAL])
+    document.getElementById('cmd').placeholder = T().placeholder(n);
+    const E = T().estados;
+    if (E[ESTADO_ACTUAL])
       document.getElementById('estado-line').textContent =
-        ESTADOS[ESTADO_ACTUAL]();
+        E[ESTADO_ACTUAL]();
   },
   clear() { document.getElementById('log').innerHTML = ''; window._stream = null; },
   error() {
@@ -520,9 +655,12 @@ const hud = {
   },
   brains(list) {
     const c = document.getElementById('brains');
-    c.innerHTML = '<span id="brains-label" title="El modelo de IA que ' +
-      'piensa las respuestas. Cambialo cuando quieras: la conversación ' +
-      'sigue donde estaba.">Cerebro</span>';
+    c.innerHTML = '';
+    const lb = document.createElement('span');
+    lb.id = 'brains-label';
+    lb.textContent = T().cerebro;
+    lb.title = T().tipCerebro;
+    c.appendChild(lb);
     const s = document.createElement('select');
     s.id = 'brain-sel';
     list.forEach(b => { const o = document.createElement('option');
@@ -567,19 +705,45 @@ function rotarPromo() {
 }
 setInterval(rotarPromo, 15000);
 rotarPromo();
-const GRUPOS = {
-  charla: 'Modo charla (todo va al cerebro, sin wake word)',
-  redactor: 'Modo redactor (anota todo lo dictado)',
-  coach: 'Modo coach (coach ontológico confrontativo)',
-  privacidad: 'Modo privacidad (apaga el micrófono)',
-  salir: 'Salir de un modo (charla/redactor)',
-  reiniciar: 'Conversación nueva (borra el hilo actual)',
-};
+aplicarIdioma();
+// Textos fijos de la UI según el idioma activo (los que no re-renderiza
+// nadie más). Se llama al cargar y al cambiar de idioma.
+function aplicarIdioma() {
+  const t = T();
+  const set = (id, prop, val) => {
+    const el = document.getElementById(id);
+    if (el) el[prop] = val;
+  };
+  set('cmd', 'placeholder', t.placeholder(NOMBRE));
+  set('skills-btn', 'textContent', t.btnAjustes);
+  set('skills-btn', 'title', t.tipAjustes);
+  set('mic-btn', 'title', t.tipMic);
+  set('new-btn', 'title', t.tipNueva);
+  set('stop-btn', 'title', t.tipStop);
+  set('send-btn', 'title', t.tipEnviar);
+  set('orb', 'title', t.tipOrb);
+  set('orb-mute', 'title', t.tipOrbMute);
+  set('mini-orb', 'title', t.tipMiniOrb);
+  set('brains-label', 'textContent', t.cerebro);
+  set('brains-label', 'title', t.tipCerebro);
+  hud.state(ESTADO_ACTUAL);
+}
+let SK_DATA = null;
+function cambiarIdioma(v) {
+  LANG = v;
+  aplicarIdioma();
+  if (SK_DATA) renderSkills(SK_DATA);
+  guardarSkills();          // persiste hud_lang junto con lo demás
+}
 async function toggleSkills() {
   const b = document.body;
   b.classList.toggle('skills');
   if (!b.classList.contains('skills')) return;
-  const d = await pywebview.api.get_skills_data();
+  SK_DATA = await pywebview.api.get_skills_data();
+  renderSkills(SK_DATA);
+}
+function renderSkills(d) {
+  const t = T();
   const v = document.getElementById('skills-view');
   // Tarjeta colapsable: título + estado actual a la derecha + descripción
   // en una línea adentro. Solo la primera viene abierta.
@@ -588,65 +752,60 @@ async function toggleSkills() {
     `<span class="sum-hint">${hint}</span></summary>` +
     `<div class="sec-body"><p class="desc">${desc}</p>${cuerpo}</div></details>`;
 
-  let h = sec('Nombre', `«${d.wake.word || 'harvis'}»`,
-    'Decís este nombre y lo que sigue es el comando. Cambialo por el que ' +
-    'quieras, en cualquier idioma: la app entera se renombra. Las variantes ' +
-    'son las palabras que el reconocedor suele escribir mal (harvey, ' +
-    'harry…) y también lo despiertan.',
-    '<label>Nombre para llamarlo</label>' +
+  let h = `<div id="sk-lang"><label>${t.idioma}</label>` +
+    '<select onchange="cambiarIdioma(this.value)">' +
+    `<option value="es"${LANG === 'en' ? '' : ' selected'}>Español</option>` +
+    `<option value="en"${LANG === 'en' ? ' selected' : ''}>English</option>` +
+    '</select></div>';
+
+  h += sec(t.secNombre, `«${d.wake.word || 'harvis'}»`, t.descNombre,
+    `<label>${t.lblNombre}</label>` +
     `<input id="sk-word" value="${d.wake.word || ''}">` +
-    '<label>Variantes aceptadas (separadas por coma)</label>' +
+    `<label>${t.lblAliases}</label>` +
     `<input id="sk-aliases" value="${(d.wake.aliases || []).join(', ')}">`,
     true);
 
   let cmds = '';
-  for (const [k, titulo] of Object.entries(GRUPOS)) {
+  for (const [k, titulo] of Object.entries(t.grupos)) {
     cmds += `<label>${titulo}</label>` +
       `<textarea id="sk-${k}" rows="2">${(d.comandos[k] || []).join(', ')}</textarea>`;
   }
-  h += sec('Comandos de voz', 'frases que activan los modos',
-    'Las frases que activan cada modo. Están las de fábrica: agregá las ' +
-    'tuyas separadas por coma, con las palabras que usás vos.', cmds);
+  h += sec(t.secComandos, t.hintComandos, t.descComandos, cmds);
 
   const br = d.briefing || {};
   const bd = br.dias || [0, 1, 2, 3, 4];
-  const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-  h += sec('Briefing matinal',
+  h += sec(t.secBriefing,
     br.activo ? `${br.hora || '09:00'} · ${bd.length === 7
-      ? 'todos los días' : bd.length + ' días'}` : 'apagado',
-    'El parte de la mañana por voz: clima, pendientes y Teams sin leer ' +
-    'nada. Elegí hora y días; «feriados no» lo calla los feriados de ' +
-    'Argentina.',
+      ? t.todosLosDias : t.nDias(bd.length)}` : t.apagado,
+    t.descBriefing,
     `<label class="sk-check"><input type="checkbox" id="sk-brief-activo"` +
-    `${br.activo ? ' checked' : ''}><span>Activado</span></label>` +
-    '<label>Hora</label>' +
+    `${br.activo ? ' checked' : ''}><span>${t.lblActivado}</span></label>` +
+    `<label>${t.lblHora}</label>` +
     `<input type="time" id="sk-brief-hora" value="${br.hora || '09:00'}">` +
-    '<label>Días</label><div class="sk-dias">' +
-    DIAS.map((n, i) => `<label><input type="checkbox" class="sk-dia" ` +
+    `<label>${t.lblDias}</label><div class="sk-dias">` +
+    t.dias.map((n, i) => `<label><input type="checkbox" class="sk-dia" ` +
       `value="${i}"${bd.includes(i) ? ' checked' : ''}>${n}</label>`).join('') +
     '</div>' +
     `<label class="sk-check"><input type="checkbox" id="sk-brief-feriados"` +
-    `${br.saltar_feriados ? ' checked' : ''}><span>Feriados no</span></label>`);
+    `${br.saltar_feriados ? ' checked' : ''}><span>${t.lblFeriados}</span></label>`);
 
   const sks = d.skills || [];
-  h += sec('Skills instaladas', `${sks.length}`,
-    'Cada skill es un archivo .py que le enseña un truco nuevo: sus tools ' +
-    'quedan disponibles para cualquier cerebro al instante, sin reiniciar.',
+  h += sec(t.secSkills, `${sks.length}`, t.descSkills,
     sks.map(s => `<div class="sk-item"><b>${s.nombre}</b><br>` +
       `<span class="t">${s.desc}</span><br>` +
       `<span class="t">tools: ${s.tools.join(', ')}</span></div>`).join('') +
-    '<button class="sk-accion" onclick="instalarSkill()">＋ Instalar skill…</button>');
+    `<button class="sk-accion" onclick="instalarSkill()">${t.btnInstalar}</button>`);
 
   h += '<div id="sk-status"></div>' +
     '<div id="sk-foot">' +
-    '<button id="sk-volver" onclick="toggleSkills()">← Volver</button>' +
-    '<button id="sk-save" onclick="guardarSkills()">Guardar y aplicar</button>' +
+    `<button id="sk-volver" onclick="toggleSkills()">${t.btnVolver}</button>` +
+    `<button id="sk-save" onclick="guardarSkills()">${t.btnGuardar}</button>` +
     '</div>';
   v.innerHTML = h;
   v.scrollTop = 0;
 }
 async function instalarSkill() {
-  document.getElementById('sk-status').textContent = 'Eligiendo archivo…';
+  document.getElementById('sk-status').textContent = T().eligiendo;
   const r = await pywebview.api.instalar_skill();
   document.getElementById('sk-status').textContent = r;
   if (r.startsWith('Skill')) setTimeout(async () => {
@@ -660,6 +819,7 @@ async function guardarSkills() {
   const lista = id => document.getElementById(id).value
     .split(',').map(x => x.trim()).filter(Boolean);
   const payload = {
+    hud_lang: LANG,
     wake: { word: document.getElementById('sk-word').value.trim(),
             aliases: lista('sk-aliases') },
     comandos: {},
@@ -670,7 +830,8 @@ async function guardarSkills() {
       saltar_feriados: document.getElementById('sk-brief-feriados').checked,
     },
   };
-  for (const k of Object.keys(GRUPOS)) payload.comandos[k] = lista('sk-' + k);
+  for (const k of Object.keys(I18N.es.grupos))
+    payload.comandos[k] = lista('sk-' + k);
   const r = await pywebview.api.save_comandos(JSON.stringify(payload));
   document.getElementById('sk-status').textContent = r;
 }
@@ -691,6 +852,7 @@ class Hud:
         skills_data(): dict para la vista Skills; save_fn(dict): persiste
         comandos; reload_sink(): recarga skills tras instalar (todos llegan
         desde el thread del webview)."""
+        self.cfg = cfg
         self.loop = loop
         self.text_sink = text_sink
         self.mic_sink = mic_sink
@@ -794,33 +956,42 @@ class Hud:
         import shutil
 
         import webview
+        en = (self.cfg or {}).get("hud_lang") == "en"
         try:
             rutas = self.window.create_file_dialog(
                 webview.OPEN_DIALOG,
                 file_types=("Skill de HARVIS (*.py)", "Todos (*.*)"))
             if not rutas:
-                return "Cancelado."
+                return "Canceled." if en else "Cancelado."
             src = rutas[0]
             spec = importlib.util.spec_from_file_location("candidata", src)
             mod = importlib.util.module_from_spec(spec)
             try:
                 spec.loader.exec_module(mod)
             except Exception as e:
-                return f"La skill no carga: {e}"
+                return (f"The skill fails to load: {e}" if en
+                        else f"La skill no carga: {e}")
             if not getattr(mod, "TOOLS", None) and \
                     not getattr(mod, "PROMPT", ""):
-                return "Ese archivo no es una skill (sin TOOLS ni PROMPT)."
+                return ("That file is not a skill (no TOOLS or PROMPT)."
+                        if en else
+                        "Ese archivo no es una skill (sin TOOLS ni PROMPT).")
             destino = os.path.join(self.skills_dir, os.path.basename(src))
             existia = os.path.exists(destino)
             os.makedirs(self.skills_dir, exist_ok=True)
             shutil.copy2(src, destino)
             self.loop.call_soon_threadsafe(self.reload_sink)
+            if en:
+                verbo = "updated" if existia else "installed"
+                return (f"Skill {verbo}: {os.path.basename(src)} — "
+                        "hot-reloading...")
             verbo = "actualizada" if existia else "instalada"
             return (f"Skill {verbo}: {os.path.basename(src)} — "
                     "recargando en vivo...")
         except Exception as e:
             log.exception("instalar_skill")
-            return f"Error instalando: {e}"
+            return (f"Install error: {e}" if en
+                    else f"Error instalando: {e}")
 
     def switch_brain(self, brain: str):
         self.loop.call_soon_threadsafe(self.text_sink,
@@ -952,7 +1123,8 @@ def serve_main_thread(timeout: float = 300):
     hud.window = webview.create_window(
         "HARVIS", html=HTML.replace("__AVATAR__", AVATAR_URI)
                           .replace("__FONT__", FONT_URI)
-                          .replace("__PROMOS__", _promos_json()),
+                          .replace("__PROMOS__", _promos_json())
+                          .replace("__LANG__", _hud_lang(hud.cfg)),
         frameless=True, easy_drag=False,
         on_top=True, width=w, height=h,
         min_size=(ORB[0], ORB[1]),  # el default es (200,100) y pisa al orbe

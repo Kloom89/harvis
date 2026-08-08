@@ -188,6 +188,8 @@ def load_config(path="config.yaml") -> dict:
                     cfg["wake"]["pattern"] = None
             if ov.get("briefing"):
                 cfg.setdefault("briefing", {}).update(ov["briefing"])
+            if ov.get("hud_lang") in ("es", "en"):
+                cfg["hud_lang"] = ov["hud_lang"]
     except Exception:
         log.exception("comandos.yaml ilegible, sigo con defaults")
     aplicar_comandos(cfg)
@@ -237,11 +239,25 @@ def guardar_comandos(cfg: dict, payload: dict) -> str:
                           "saltar_feriados": bool(b.get("saltar_feriados"))}
         # la skill relee cfg["briefing"] en cada vuelta: aplica sin reiniciar
         cfg.setdefault("briefing", {}).update(ov["briefing"])
+    if payload.get("hud_lang") in ("es", "en"):
+        ov["hud_lang"] = payload["hud_lang"]
+        cfg["hud_lang"] = payload["hud_lang"]
+    # merge sobre lo ya guardado: un payload parcial no puede pisar los
+    # overrides que no trae (antes el dump reescribía el archivo entero)
+    previos = {}
+    try:
+        if os.path.exists(COMANDOS_FILE):
+            previos = yaml.safe_load(open(COMANDOS_FILE,
+                                          encoding="utf-8")) or {}
+    except Exception:
+        pass
+    previos.update(ov)
     with open(COMANDOS_FILE, "w", encoding="utf-8") as f:
-        yaml.safe_dump(ov, f, allow_unicode=True, sort_keys=False)
+        yaml.safe_dump(previos, f, allow_unicode=True, sort_keys=False)
     aplicar_comandos(cfg)
     log.info("comandos actualizados desde el HUD: %s", list(ov))
-    return "Guardado y aplicado."
+    return ("Saved and applied." if cfg.get("hud_lang") == "en"
+            else "Guardado y aplicado.")
 
 
 aplicar_comandos({})  # defaults al importar; load_config re-aplica overrides
@@ -502,7 +518,9 @@ async def main():
                 # webview → threadsafe.
                 loop.call_soon_threadsafe(
                     oido.queue.put_nowait, ("reload_skills", None))
-                r += f" Ahora me llamo {nombre}."
+                r += (f" I'm called {nombre} now."
+                      if cfg.get("hud_lang") == "en"
+                      else f" Ahora me llamo {nombre}.")
             return r
 
         def _skills_data():
@@ -510,6 +528,7 @@ async def main():
                              "aliases": cfg.get("wake", {}).get("aliases", [])},
                     "comandos": cfg.get("comandos", {}),
                     "briefing": cfg.get("briefing", {}),
+                    "hud_lang": cfg.get("hud_lang"),
                     "skills": skills_info}
 
         hud = Hud(cfg, loop,
@@ -530,25 +549,37 @@ async def main():
     # Estados granulares en el HUD: "Leyendo Teams…" en vez de "pensando…"
     # a secas. registry avisa al ARRANCAR cada tool, con cualquier driver.
     _ACTIVIDAD = [
-        ("teams", "Leyendo Teams…"), ("whatsapp", "Escribiendo WhatsApp…"),
-        ("play_music", "Poniendo música…"), ("web_answer", "Buscando en internet…"),
-        ("browser", "Usando el navegador…"), ("screenshot", "Mirando la pantalla…"),
-        ("cerebro_", "Buscando en el vault…"), ("homelab", "Consultando el homelab…"),
-        ("code_", "Leyendo código…"), ("project", "Revisando el proyecto…"),
-        ("open_app", "Abriendo la aplicación…"), ("close_window", "Cerrando la ventana…"),
-        ("timer", "Con los timers…"), ("alarm", "Programando la alarma…"),
-        ("weather", "Consultando el clima…"), ("get_time", "Mirando la hora…"),
-        ("remember", "Anotando…"), ("forget", "Borrando el dato…"),
-        ("recall", "Haciendo memoria…"), ("redactor", "Con el dictado…"),
-        ("send_to_claude", "Delegando a Claude Code…"),
-        ("media_key", "Controlando la música…"),
-        ("harvis_update", "Actualizándome…"),
+        ("teams", "Leyendo Teams…", "Reading Teams…"),
+        ("whatsapp", "Escribiendo WhatsApp…", "Writing a WhatsApp…"),
+        ("play_music", "Poniendo música…", "Putting music on…"),
+        ("web_answer", "Buscando en internet…", "Searching the web…"),
+        ("browser", "Usando el navegador…", "Using the browser…"),
+        ("screenshot", "Mirando la pantalla…", "Looking at the screen…"),
+        ("cerebro_", "Buscando en el vault…", "Searching the vault…"),
+        ("homelab", "Consultando el homelab…", "Checking the homelab…"),
+        ("code_", "Leyendo código…", "Reading code…"),
+        ("project", "Revisando el proyecto…", "Reviewing the project…"),
+        ("open_app", "Abriendo la aplicación…", "Opening the app…"),
+        ("close_window", "Cerrando la ventana…", "Closing the window…"),
+        ("timer", "Con los timers…", "On the timers…"),
+        ("alarm", "Programando la alarma…", "Setting the alarm…"),
+        ("weather", "Consultando el clima…", "Checking the weather…"),
+        ("get_time", "Mirando la hora…", "Checking the time…"),
+        ("remember", "Anotando…", "Writing it down…"),
+        ("forget", "Borrando el dato…", "Deleting that…"),
+        ("recall", "Haciendo memoria…", "Recalling…"),
+        ("redactor", "Con el dictado…", "Taking dictation…"),
+        ("send_to_claude", "Delegando a Claude Code…",
+         "Delegating to Claude Code…"),
+        ("media_key", "Controlando la música…", "Controlling the music…"),
+        ("harvis_update", "Actualizándome…", "Updating myself…"),
     ]
 
     def _mostrar_actividad(nombre):
-        for pref, texto in _ACTIVIDAD:
+        en = cfg.get("hud_lang") == "en"
+        for pref, texto_es, texto_en in _ACTIVIDAD:
             if pref in nombre:
-                hud.actividad(texto)
+                hud.actividad(texto_en if en else texto_es)
                 return
         hud.actividad(f"Usando {nombre.replace('_', ' ')}…")
 
