@@ -41,6 +41,9 @@ _PROMOS_DATA = [
      "SEE MORE", "#3ddc84", "https://www.tiendanube.com/tienda-aplicaciones-nube/ganancia-real"),
     ("digitala", "Digitala", "Digital delivery for your Tiendanube store",
      "SEE MORE", "#4da3ff", "https://kloomstudio.com.ar/en/apps/digitala"),
+    ("harvis-sponsor", "Sponsor HARVIS",
+     "Keep it free — and license it for work",
+     "SPONSOR", "#db61a2", "https://github.com/sponsors/Kloom89"),
 ]
 
 
@@ -58,6 +61,14 @@ def _hud_lang(cfg: dict) -> str:
     return "es" if loc.startswith(("es", "spanish")) else "en"
 
 
+def _con_utm(url: str, slug: str) -> str:
+    """Sin esto el banner es ciego: no hay forma de saber si alguien lo
+    clickea, y un canal que no se mide no se puede mejorar."""
+    sep = "&" if "?" in url else "?"
+    return (f"{url}{sep}utm_source=harvis&utm_medium=hud_banner"
+            f"&utm_campaign={slug}")
+
+
 def _promos_json() -> str:
     out = []
     for slug, nombre, tag, cta, color, url in _PROMOS_DATA:
@@ -68,8 +79,8 @@ def _promos_json() -> str:
                     + base64.b64encode(open(ruta, "rb").read()).decode())
         except Exception:
             pass
-        out.append({"logo": logo, "name": nombre, "tag": tag,
-                    "cta": cta, "color": color, "url": url})
+        out.append({"logo": logo, "name": nombre, "tag": tag, "cta": cta,
+                    "color": color, "url": _con_utm(url, slug)})
     return json.dumps(out)
 
 ORB = (140, 76)      # cápsula: avatar + botón de privacidad
@@ -362,6 +373,9 @@ body.skills #entrada { display: none !important; }
   background: none; border: 1px dashed var(--cyan-dim); color: var(--cyan);
   border-radius: 10px; cursor: pointer; font-size: 12px; }
 .sk-accion:hover { border-style: solid; }
+.sk-sponsor { border-color: #a8477a; color: #ff8fc4; }
+.sk-sponsor:hover { border-color: #db61a2;
+  box-shadow: 0 0 10px rgba(219, 97, 162, .25); }
 /* Línea de estado con punto de actividad: el usuario SIEMPRE sabe qué
    está pasando ("pensando…", "Leyendo Teams…", "hablando"). */
 #estado-line { font-size: 11px; color: var(--muted); padding: 7px 14px 0;
@@ -543,6 +557,14 @@ es: {
     'reiniciar.',
   btnInstalar: '＋ Instalar skill…', eligiendo: 'Eligiendo archivo…',
   btnGuardar: 'Guardar y aplicar', btnVolver: '← Volver',
+  secApoyar: 'Apoyar el proyecto', hintApoyar: 'gratis para uso personal',
+  descApoyar: 'HARVIS es gratis y va a seguir siéndolo. Lo que compra un ' +
+    'sponsor son las horas que le entran: skills nuevas, menos asperezas, ' +
+    'y responderle a la gente que aparece con un problema.',
+  descTrabajo: '<b>¿Lo usás para trabajar?</b> La licencia estándar cubre ' +
+    'uso personal nada más. Desde 50 USD por mes está la licencia ' +
+    'comercial para tu máquina; 250 y 1.000 cubren un equipo.',
+  btnSponsor: 'Ver los tiers en GitHub Sponsors',
 },
 en: {
   estados: {
@@ -600,10 +622,20 @@ en: {
     'its tools become available to every brain instantly, no restart.',
   btnInstalar: '＋ Install skill…', eligiendo: 'Choosing file…',
   btnGuardar: 'Save & apply', btnVolver: '← Back',
+  secApoyar: 'Support the project', hintApoyar: 'free for personal use',
+  descApoyar: 'HARVIS is free and stays free. What sponsorship buys is ' +
+    'time: hours that go into new skills, fewer rough edges, and ' +
+    'answering the people who show up with issues.',
+  descTrabajo: '<b>Using it for work?</b> The standard license covers ' +
+    'personal use only. From $50/month there is a commercial license for ' +
+    'your own machine; $250 and $1,000 cover a team.',
+  btnSponsor: 'See the tiers on GitHub Sponsors',
 },
 };
 const T = () => I18N[LANG] || I18N.es;
 if (!I18N[LANG]) LANG = 'es';
+const SPONSOR_URL = 'https://github.com/sponsors/Kloom89' +
+  '?utm_source=harvis&utm_medium=hud_ajustes&utm_campaign=sponsor';
 let ESTADO_ACTUAL = 'idle';
 let BRAIN_ACTUAL = '';
 const hud = {
@@ -800,6 +832,11 @@ function renderSkills(d) {
       `<span class="t">${s.desc}</span><br>` +
       `<span class="t">tools: ${s.tools.join(', ')}</span></div>`).join('') +
     `<button class="sk-accion" onclick="instalarSkill()">${t.btnInstalar}</button>`);
+
+  h += sec(t.secApoyar, t.hintApoyar, t.descApoyar,
+    `<p class="desc">${t.descTrabajo}</p>` +
+    '<button class="sk-accion sk-sponsor" onclick="pywebview.api.abrir_url' +
+    `('${SPONSOR_URL}')">♥ ${t.btnSponsor}</button>`);
 
   h += '<div id="sk-status"></div>' +
     '<div id="sk-foot">' +
