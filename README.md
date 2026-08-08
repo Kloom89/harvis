@@ -265,6 +265,9 @@ issues.
   <a href="https://github.com/sponsors/Kloom89"><img alt="Sponsor HARVIS" src="https://img.shields.io/badge/sponsor-HARVIS-ff5f8f?style=for-the-badge&logo=githubsponsors&logoColor=white"></a>
 </p>
 
+There's also a **[skill store](https://kloom89.github.io/harvis/)** — paid
+skills that don't ship with HARVIS, installable in one click from the HUD.
+
 Sponsors get their name in this section and their issues looked at first.
 
 **Using HARVIS for work?** The standard license doesn't cover that. The

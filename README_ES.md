@@ -273,6 +273,9 @@ aparece con un problema.
   <a href="https://github.com/sponsors/Kloom89"><img alt="Sponsor HARVIS" src="https://img.shields.io/badge/sponsor-HARVIS-ff5f8f?style=for-the-badge&logo=githubsponsors&logoColor=white"></a>
 </p>
 
+También hay una **[tienda de skills](https://kloom89.github.io/harvis/)** —
+skills pagas que no vienen incluidas, instalables en un click desde el HUD.
+
 Los sponsors van con su nombre en esta sección y sus issues se miran primero.
 
 **¿Lo usás para trabajar?** La licencia estándar no cubre eso. El tier de 50 USD
