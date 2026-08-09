@@ -1,5 +1,5 @@
 {
-  "_comment": "Catálogo de la tienda del HUD. La app lo lee de raw.githubusercontent en cada apertura: agregar una skill acá la publica al instante, sin release. url = checkout de LemonSqueezy (store kloom). period: 'month' = suscripción, ausente = compra única.",
+  "_comment": "Catálogo de la tienda del HUD. La app lo lee de raw.githubusercontent en cada apertura: agregar una skill acá la publica al instante, sin release. url = checkout de LemonSqueezy (store kloom). period: 'month' = suscripción, ausente = compra única. decir = frases de ejemplo (lo que el usuario le DICE a HARVIS) — sin esto nadie sabe cómo usar lo que compró.",
   "version": 1,
   "skills": [
     {
@@ -14,6 +14,16 @@
         "es": "Practicás conversación hablada en inglés, portugués, italiano, francés o alemán. Te corrige mientras charlan, sin cortarte, y se acuerda de tus errores para la próxima.",
         "en": "Spoken conversation practice in English, Portuguese, Italian, French or German. It corrects you mid-chat without breaking the flow, and remembers your mistakes for next time."
       },
+      "decir": {
+        "es": [
+          "Harvis, practiquemos inglés",
+          "Harvis, ¿cómo vengo con el francés?"
+        ],
+        "en": [
+          "Harvis, let's practice English",
+          "Harvis, how am I doing with French?"
+        ]
+      },
       "url": "https://kloom.lemonsqueezy.com/checkout/buy/9d0dc732-743e-4481-8e1e-48b7f11e8372"
     },
     {
@@ -27,6 +37,16 @@
         "es": "Tu vault de Obsidian (o cualquier carpeta de notas) por voz: buscá, leé, creá, agregá y anotá en la diaria sin abrir la app. Compra única.",
         "en": "Your Obsidian vault (or any folder of Markdown notes) by voice: search, read, create, append and daily note without opening the app. One-off purchase."
       },
+      "decir": {
+        "es": [
+          "Harvis, anotá en mi diaria que llamé al contador",
+          "Harvis, buscá en mis notas qué tengo sobre impuestos"
+        ],
+        "en": [
+          "Harvis, note in my daily that I called the accountant",
+          "Harvis, search my notes for anything about taxes"
+        ]
+      },
       "url": "https://kloom.lemonsqueezy.com/checkout/buy/2664d3c8-6348-4e51-aaee-ae47666c841c"
     },
     {
@@ -39,6 +59,18 @@
       "desc": {
         "es": "Grabá la reunión (lo que suena y tu mic), se transcribe local con Whisper y HARVIS te da el resumen con las tareas. El audio nunca sale de tu PC. Compra única.",
         "en": "Record the meeting (system audio plus your mic), it transcribes locally with Whisper and HARVIS gives you the summary and action items. Audio never leaves your PC. One-off purchase."
+      },
+      "decir": {
+        "es": [
+          "Harvis, grabá la reunión",
+          "Harvis, frená la grabación",
+          "Harvis, resumime la reunión"
+        ],
+        "en": [
+          "Harvis, record the meeting",
+          "Harvis, stop recording",
+          "Harvis, summarize the meeting"
+        ]
       },
       "url": "https://kloom.lemonsqueezy.com/checkout/buy/88e82ea4-9496-45be-9505-7ee66213bfd5"
     }

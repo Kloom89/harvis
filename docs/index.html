@@ -34,15 +34,6 @@ header h1 span { display: block; font-size: 10px; letter-spacing: 1.5px;
   border-radius: 8px; color: var(--muted); padding: 5px 10px;
   cursor: pointer; font-size: 12px; }
 #lang-btn:hover { color: var(--cyan); border-color: var(--cyan-dim); }
-#cart-btn { position: relative; background: linear-gradient(180deg,
-    #0b2334, #081a29); border: 1px solid var(--line); border-radius: 10px;
-  color: var(--text); padding: 7px 14px; cursor: pointer; font-size: 13px; }
-#cart-btn:hover { border-color: var(--cyan-dim); }
-#cart-n { position: absolute; top: -7px; right: -7px; min-width: 18px;
-  height: 18px; border-radius: 9px; background: var(--pink); color: #fff;
-  font-size: 11px; font-weight: 700; display: none; align-items: center;
-  justify-content: center; padding: 0 4px; }
-
 .hero { text-align: center; padding: 52px 20px 8px; }
 .hero h2 { font-size: clamp(26px, 4.5vw, 38px); line-height: 1.2;
   color: #f2faff; }
@@ -62,16 +53,17 @@ header h1 span { display: block; font-size: 10px; letter-spacing: 1.5px;
 .precio { color: var(--green); font-weight: 700; font-size: 15px; }
 .precio i { font-style: normal; font-weight: 400; color: var(--muted);
   font-size: 12px; }
-.card p { color: var(--muted); font-size: 13.5px; flex: 1; }
+.card p { color: var(--muted); font-size: 13.5px; }
+/* Lo que se le DICE a HARVIS: la demo más barata de que la skill sirve. */
+.decir { margin: 10px 0 0; padding-left: 10px; flex: 1;
+  border-left: 2px solid rgba(53, 214, 255, .35); font-size: 13px;
+  line-height: 1.7; color: #7de4ff; }
 .filas { display: flex; gap: 8px; }
 .btn { flex: 1; padding: 9px 0; border-radius: 10px; cursor: pointer;
   font-size: 13px; font-weight: 600; text-align: center; border: 0; }
 .btn-buy { background: linear-gradient(135deg, #1691bd, #35d6ff);
   color: #04222e; }
 .btn-buy:hover { box-shadow: 0 0 12px rgba(53, 214, 255, .45); }
-.btn-cart { background: none; border: 1px dashed var(--cyan-dim);
-  color: var(--cyan); }
-.btn-cart:hover { border-style: solid; }
 .btn[disabled] { background: var(--panel); color: var(--muted);
   border: 1px solid var(--line); cursor: default; box-shadow: none; }
 .tag-sub { align-self: flex-start; font-size: 10px; letter-spacing: 1.2px;
@@ -93,37 +85,6 @@ header h1 span { display: block; font-size: 10px; letter-spacing: 1.5px;
 footer { border-top: 1px solid var(--line); margin-top: 40px;
   padding: 22px 0 30px; color: var(--muted); font-size: 13px;
   text-align: center; }
-
-/* ---------- carrito ---------- */
-#overlay { position: fixed; inset: 0; background: rgba(2, 6, 10, .6);
-  display: none; z-index: 30; }
-#cart { position: fixed; top: 0; right: -360px; width: 340px; height: 100%;
-  background: #081420; border-left: 1px solid var(--line); z-index: 31;
-  display: flex; flex-direction: column; transition: right .28s ease; }
-body.cart-open #overlay { display: block; }
-body.cart-open #cart { right: 0; }
-#cart header2, #cart .head { display: flex; align-items: center;
-  padding: 16px; border-bottom: 1px solid var(--line); }
-#cart .head b { flex: 1; letter-spacing: 2px; color: var(--cyan);
-  font-size: 13px; }
-#cart .head button { background: none; border: 0; color: var(--muted);
-  font-size: 18px; cursor: pointer; }
-#items { flex: 1; overflow-y: auto; padding: 10px 16px; }
-.item { display: flex; align-items: center; gap: 8px; padding: 10px 0;
-  border-bottom: 1px solid rgba(18, 40, 58, .6); font-size: 13.5px; }
-.item .nom { flex: 1; }
-.item .pr { color: var(--green); font-size: 12.5px; white-space: nowrap; }
-.item .pr i { color: var(--muted); font-style: normal; }
-.item button { background: none; border: 0; color: var(--muted);
-  cursor: pointer; font-size: 15px; }
-.item button:hover { color: #ff5c5c; }
-#cart .foot { padding: 14px 16px 18px; border-top: 1px solid var(--line); }
-#total { font-size: 13.5px; margin-bottom: 10px; color: var(--text); }
-#total i { color: var(--muted); font-style: normal; }
-#pagar { width: 100%; }
-#nota-pago { font-size: 11.5px; color: var(--muted); margin-top: 9px;
-  line-height: 1.5; }
-@media (max-width: 420px) { #cart { width: 100%; right: -100%; } }
 </style>
 </head>
 <body>
@@ -132,7 +93,6 @@ body.cart-open #cart { right: 0; }
   <img src="harvis.png" alt="HARVIS">
   <h1>HARVIS<span data-t="sub"></span></h1>
   <button id="lang-btn" onclick="switchLang()"></button>
-  <button id="cart-btn" onclick="toggleCart()">🛒 <span data-t="carrito"></span><span id="cart-n"></span></button>
 </div></header>
 
 <div class="wrap">
@@ -162,24 +122,11 @@ body.cart-open #cart { right: 0; }
   <a href="https://kloomstudio.com.ar">KloomStudio</a>
 </footer>
 
-<div id="overlay" onclick="toggleCart()"></div>
-<aside id="cart">
-  <div class="head"><b data-t="tuCarrito"></b>
-    <button onclick="toggleCart()">✕</button></div>
-  <div id="items"></div>
-  <div class="foot">
-    <div id="total"></div>
-    <button id="pagar" class="btn btn-buy" onclick="pagar()"></button>
-    <p id="nota-pago" data-t="nota"></p>
-  </div>
-</aside>
-
 <script>
 const STORE_URL = 'https://raw.githubusercontent.com/Kloom89/harvis/main/store.json';
 const I18N = {
 es: {
   sub: 'tienda de skills',
-  carrito: 'Carrito',
   titulo: 'Enseñale trucos nuevos a <b>HARVIS</b>',
   bajada: 'Skills pagas para el asistente de voz hackeable de Windows. ' +
     'Cada una es un archivo que se instala en un click desde el HUD — ' +
@@ -191,8 +138,6 @@ es: {
   porMes: ' / mes',
   comprar: 'Comprar',
   suscribirme: 'Suscribirme',
-  agregar: '+ Carrito',
-  enCarrito: '✓ En el carrito',
   comoTitulo: 'Cómo funciona',
   p1t: 'Comprás la skill', p1: 'Pago seguro por LemonSqueezy, con tarjeta. ' +
     'Te llega el archivo .py y tu clave de licencia por mail.',
@@ -202,20 +147,11 @@ es: {
   p3t: 'Le hablás', p3: 'La skill queda disponible para cualquier cerebro ' +
     'que uses (Claude, Groq, Ollama…). Las mensuales se renuevan solas y ' +
     'las podés cancelar cuando quieras.',
-  tuCarrito: 'TU CARRITO',
-  carritoVacio: 'Todavía no agregaste nada.',
-  pagar: 'Pagar',
-  pagarN: n => `Abrir pago (${n} restantes)`,
-  total: 'Total: ',
-  nota: 'Cada skill se paga por separado (así funciona LemonSqueezy): el ' +
-    'botón te va abriendo un pago por vez. Las suscripciones se cancelan ' +
-    'cuando quieras desde el mail de compra.',
   pie: 'Hecho por ',
   pieSponsor: 'Sponsorear',
 },
 en: {
   sub: 'skill store',
-  carrito: 'Cart',
   titulo: 'Teach <b>HARVIS</b> new tricks',
   bajada: 'Paid skills for the hackable Windows voice assistant. Each one ' +
     'is a file you install in one click from the HUD — some you buy once ' +
@@ -227,8 +163,6 @@ en: {
   porMes: ' / month',
   comprar: 'Buy',
   suscribirme: 'Subscribe',
-  agregar: '+ Cart',
-  enCarrito: '✓ In cart',
   comoTitulo: 'How it works',
   p1t: 'Buy the skill', p1: 'Secure card checkout through LemonSqueezy. ' +
     'You get the .py file and your license key by email.',
@@ -237,14 +171,6 @@ en: {
   p3t: 'Talk to it', p3: 'The skill works with whichever brain you use ' +
     '(Claude, Groq, Ollama…). Monthly ones renew on their own and can be ' +
     'cancelled anytime.',
-  tuCarrito: 'YOUR CART',
-  carritoVacio: 'Nothing here yet.',
-  pagar: 'Checkout',
-  pagarN: n => `Open checkout (${n} left)`,
-  total: 'Total: ',
-  nota: 'Each skill is a separate checkout (that is how LemonSqueezy ' +
-    'works): the button opens one payment at a time. Subscriptions can be ' +
-    'cancelled anytime from the purchase email.',
   pie: 'Made by ',
   pieSponsor: 'Sponsor',
 },
@@ -253,15 +179,17 @@ let LANG = (navigator.language || 'en').toLowerCase().startsWith('es')
   ? 'es' : 'en';
 const T = () => I18N[LANG];
 let SKILLS = [];
-let CART = [];
-try { CART = JSON.parse(localStorage.getItem('harvis-cart') || '[]'); }
-catch (e) { CART = []; }
-let COLA = [];   // checkouts pendientes de abrir (uno por gesto del usuario)
 
 function switchLang() { LANG = LANG === 'es' ? 'en' : 'es'; render(); }
 
 function nombre(s) { return (s.name || {})[LANG] || (s.name || {}).en || s.id; }
 function desc(s) { return (s.desc || {})[LANG] || (s.desc || {}).en || ''; }
+function decirHtml(s) {
+  const f = (s.decir || {})[LANG] || (s.decir || {}).en || [];
+  return f.length
+    ? `<p class="decir">${f.map(x => '«' + x + '»').join('<br>')}</p>`
+    : '';
+}
 function urlUtm(s, medio) {
   return s.url + (s.url.includes('?') ? '&' : '?') +
     'utm_source=harvis&utm_medium=' + medio + '&utm_campaign=' + s.id;
@@ -281,19 +209,17 @@ function render() {
     if (typeof v === 'string') el.innerHTML = v;
   });
   const grid = document.getElementById('grid');
+  // Un botón por tarjeta: LemonSqueezy no tiene checkout multi-producto,
+  // así que un carrito solo prometía algo que después no podía cumplir.
   grid.innerHTML = SKILLS.map(s => {
-    const enVenta = !!s.url;
-    const enCarrito = CART.includes(s.id);
     const sub = s.period === 'month';
     return `<div class="card">` +
       (sub ? `<span class="tag-sub">${t.suscripcion}</span>` : '') +
       `<h3>${nombre(s)}</h3>${precioHtml(s)}<p>${desc(s)}</p>` +
+      decirHtml(s) +
       `<div class="filas">` +
-      (enVenta
-        ? `<button class="btn btn-cart" onclick="addCart('${s.id}')"` +
-          `${enCarrito ? ' disabled' : ''}>` +
-          `${enCarrito ? t.enCarrito : t.agregar}</button>` +
-          `<button class="btn btn-buy" onclick="window.open(` +
+      (s.url
+        ? `<button class="btn btn-buy" onclick="window.open(` +
           `'${urlUtm(s, 'web_store')}','_blank')">` +
           `${sub ? t.suscribirme : t.comprar}</button>`
         : `<button class="btn" disabled>${t.proximamente}</button>`) +
@@ -301,67 +227,10 @@ function render() {
   }).join('');
   document.getElementById('vacio').style.display =
     SKILLS.length ? 'none' : 'block';
-  renderCart();
 }
 
-function renderCart() {
-  const t = T();
-  const items = CART.map(id => SKILLS.find(s => s.id === id))
-    .filter(s => s && s.url);
-  const n = document.getElementById('cart-n');
-  n.style.display = items.length ? 'flex' : 'none';
-  n.textContent = items.length;
-  document.getElementById('items').innerHTML = items.length
-    ? items.map(s => `<div class="item"><span class="nom">${nombre(s)}` +
-        `</span><span class="pr">${s.price}` +
-        (s.period === 'month' ? `<i>${t.porMes}</i>` : '') + `</span>` +
-        `<button onclick="delCart('${s.id}')" title="✕">✕</button></div>`
-      ).join('')
-    : `<p style="color:var(--muted);padding:16px 0">${t.carritoVacio}</p>`;
-  // total: lo de una vez sumado + lo mensual aparte (no son la misma plata)
-  let unico = 0, mensual = 0;
-  for (const s of items) {
-    const v = parseFloat(String(s.price).replace(/[^0-9.]/g, '')) || 0;
-    if (s.period === 'month') mensual += v; else unico += v;
-  }
-  let tot = [];
-  if (unico) tot.push(`USD ${unico}`);
-  if (mensual) tot.push(`USD ${mensual}<i>${t.porMes}</i>`);
-  document.getElementById('total').innerHTML =
-    tot.length ? t.total + tot.join(' + ') : '';
-  const btn = document.getElementById('pagar');
-  btn.disabled = !items.length;
-  btn.textContent = COLA.length ? t.pagarN(COLA.length) : t.pagar;
-}
-
-function addCart(id) {
-  if (!CART.includes(id)) CART.push(id);
-  localStorage.setItem('harvis-cart', JSON.stringify(CART));
-  COLA = [];
-  render();
-  if (!document.body.classList.contains('cart-open')) toggleCart();
-}
-function delCart(id) {
-  CART = CART.filter(x => x !== id);
-  localStorage.setItem('harvis-cart', JSON.stringify(CART));
-  COLA = [];
-  render();
-}
-function toggleCart() { document.body.classList.toggle('cart-open'); }
-
-// Los popups en cadena los bloquea el navegador: se abre UN checkout por
-// click y el botón pasa a "abrir el siguiente (n)".
-function pagar() {
-  if (!COLA.length) {
-    COLA = CART.map(id => SKILLS.find(s => s.id === id))
-      .filter(s => s && s.url).map(s => urlUtm(s, 'web_store_cart'));
-  }
-  const url = COLA.shift();
-  if (url) window.open(url, '_blank');
-  renderCart();
-}
-
-fetch(STORE_URL, {cache: 'no-store'})
+// ?t= además de no-store: el CDN de raw cachea 5 min por URL.
+fetch(STORE_URL + '?t=' + Date.now(), {cache: 'no-store'})
   .then(r => r.json())
   .then(d => { SKILLS = d.skills || []; render(); })
   .catch(() => { SKILLS = []; render(); });
