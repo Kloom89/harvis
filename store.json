@@ -73,6 +73,33 @@
         ]
       },
       "url": "https://kloom.lemonsqueezy.com/checkout/buy/88e82ea4-9496-45be-9505-7ee66213bfd5"
+    },
+    {
+      "id": "macros",
+      "price": "USD 12",
+      "name": {
+        "es": "Scripts de teclado y mouse",
+        "en": "Keyboard & mouse scripts"
+      },
+      "desc": {
+        "es": "Grabás una vez lo que hacés a mano y HARVIS lo repite las veces que le pidas, o cada X minutos en el fondo. El clásico: que el mouse se mueva solo para no figurar ausente en Teams. Con su panel, botones y teclas rápidas. Compra única.",
+        "en": "Record what you do by hand once and HARVIS replays it as many times as you want, or every X minutes in the background. The classic: keep the mouse moving so Teams never marks you away. Comes with its own panel, buttons and hotkeys. One-off purchase."
+      },
+      "decir": {
+        "es": [
+          "Harvis, grabá un script",
+          "Harvis, guardalo como teams",
+          "Harvis, corré el script del teams",
+          "Harvis, que el del teams se repita cada 2 minutos durante 8 horas"
+        ],
+        "en": [
+          "Harvis, record a script",
+          "Harvis, save it as teams",
+          "Harvis, run the teams script",
+          "Harvis, repeat the teams one every 2 minutes for 8 hours"
+        ]
+      },
+      "url": "https://kloom.lemonsqueezy.com/checkout/buy/219b2fac-98a5-4de1-b260-dd1ed4dfe0f1"
     }
   ]
 }
