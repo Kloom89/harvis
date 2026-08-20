@@ -104,6 +104,7 @@
     {
       "id": "cripto",
       "price": "USD 9",
+      "_ls": "producto 1302826",
       "name": {
         "es": "Cripto en vivo",
         "en": "Live crypto"
@@ -124,7 +125,7 @@
           "Harvis, let me know when bitcoin crosses 120k"
         ]
       },
-      "url": ""
+      "url": "https://kloom.lemonsqueezy.com/checkout/buy/cf9abada-a9ee-421d-ad2c-9e92be81426a"
     }
   ]
 }
