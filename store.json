@@ -100,6 +100,31 @@
         ]
       },
       "url": "https://kloom.lemonsqueezy.com/checkout/buy/219b2fac-98a5-4de1-b260-dd1ed4dfe0f1"
+    },
+    {
+      "id": "cripto",
+      "price": "USD 9",
+      "name": {
+        "es": "Cripto en vivo",
+        "en": "Live crypto"
+      },
+      "desc": {
+        "es": "Una pestaña con tus criptos: logo, nombre, precio en vivo y variación del día, actualizándose sola. Elegís las monedas, preguntás precios por voz y dejás alertas que HARVIS canta solo cuando se cruzan. Compra única.",
+        "en": "A tab with your coins: logo, name, live price and daily change, refreshing on its own. Pick your coins, ask prices by voice and leave alerts HARVIS calls out when they cross. One-off purchase."
+      },
+      "decir": {
+        "es": [
+          "Harvis, ¿a cuánto está el bitcoin?",
+          "Harvis, agregá solana a mis criptos",
+          "Harvis, avisame cuando el bitcoin pase los 120 mil"
+        ],
+        "en": [
+          "Harvis, how much is bitcoin?",
+          "Harvis, add solana to my crypto list",
+          "Harvis, let me know when bitcoin crosses 120k"
+        ]
+      },
+      "url": ""
     }
   ]
 }
