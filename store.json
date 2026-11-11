@@ -24,7 +24,7 @@
           "Harvis, how am I doing with French?"
         ]
       },
-      "url": "https://kloom.lemonsqueezy.com/checkout/buy/9d0dc732-743e-4481-8e1e-48b7f11e8372"
+      "url_paused": "https://kloom.lemonsqueezy.com/checkout/buy/9d0dc732-743e-4481-8e1e-48b7f11e8372"
     },
     {
       "id": "notas-vault",
@@ -47,7 +47,7 @@
           "Harvis, search my notes for anything about taxes"
         ]
       },
-      "url": "https://kloom.lemonsqueezy.com/checkout/buy/2664d3c8-6348-4e51-aaee-ae47666c841c"
+      "url_paused": "https://kloom.lemonsqueezy.com/checkout/buy/2664d3c8-6348-4e51-aaee-ae47666c841c"
     },
     {
       "id": "reuniones",
@@ -72,7 +72,7 @@
           "Harvis, summarize the meeting"
         ]
       },
-      "url": "https://kloom.lemonsqueezy.com/checkout/buy/88e82ea4-9496-45be-9505-7ee66213bfd5"
+      "url_paused": "https://kloom.lemonsqueezy.com/checkout/buy/88e82ea4-9496-45be-9505-7ee66213bfd5"
     },
     {
       "id": "macros",
@@ -99,7 +99,7 @@
           "Harvis, repeat the teams one every 2 minutes for 8 hours"
         ]
       },
-      "url": "https://kloom.lemonsqueezy.com/checkout/buy/219b2fac-98a5-4de1-b260-dd1ed4dfe0f1"
+      "url_paused": "https://kloom.lemonsqueezy.com/checkout/buy/219b2fac-98a5-4de1-b260-dd1ed4dfe0f1"
     },
     {
       "id": "cripto",
@@ -125,7 +125,7 @@
           "Harvis, let me know when bitcoin crosses 120k"
         ]
       },
-      "url": "https://kloom.lemonsqueezy.com/checkout/buy/cf9abada-a9ee-421d-ad2c-9e92be81426a"
+      "url_paused": "https://kloom.lemonsqueezy.com/checkout/buy/cf9abada-a9ee-421d-ad2c-9e92be81426a"
     }
   ]
 }
