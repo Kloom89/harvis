@@ -139,8 +139,8 @@ es: {
   comprar: 'Comprar',
   suscribirme: 'Suscribirme',
   comoTitulo: 'Cómo funciona',
-  p1t: 'Comprás la skill', p1: 'Pago seguro por LemonSqueezy, con tarjeta. ' +
-    'Te llega el archivo .py y tu clave de licencia por mail.',
+  p1t: 'Comprás la skill', p1: 'Pago seguro por PayPal, con tarjeta o tu cuenta. ' +
+    'Al volver de PayPal descargás el .py y ves tu clave de licencia.',
   p2t: 'La instalás en un click', p2: 'En el HUD de HARVIS: AJUSTES → ' +
     'Skills instaladas → ＋ Instalar skill. Se carga al instante, sin ' +
     'reiniciar.',
@@ -164,8 +164,8 @@ en: {
   comprar: 'Buy',
   suscribirme: 'Subscribe',
   comoTitulo: 'How it works',
-  p1t: 'Buy the skill', p1: 'Secure card checkout through LemonSqueezy. ' +
-    'You get the .py file and your license key by email.',
+  p1t: 'Buy the skill', p1: 'Secure checkout through PayPal, by card or account. ' +
+    'Back from PayPal you download the .py and get your license key.',
   p2t: 'Install it in one click', p2: 'In the HARVIS HUD: SETTINGS → ' +
     'Installed skills → ＋ Install skill. It hot-loads, no restart.',
   p3t: 'Talk to it', p3: 'The skill works with whichever brain you use ' +
@@ -209,7 +209,7 @@ function render() {
     if (typeof v === 'string') el.innerHTML = v;
   });
   const grid = document.getElementById('grid');
-  // Un botón por tarjeta: LemonSqueezy no tiene checkout multi-producto,
+  // Un botón por tarjeta: el checkout de PayPal es de a una skill,
   // así que un carrito solo prometía algo que después no podía cumplir.
   grid.innerHTML = SKILLS.map(s => {
     const sub = s.period === 'month';

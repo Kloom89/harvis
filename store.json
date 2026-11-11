@@ -1,5 +1,5 @@
 {
-  "_comment": "Catálogo de la tienda del HUD. La app lo lee de raw.githubusercontent en cada apertura: agregar una skill acá la publica al instante, sin release. url = checkout de LemonSqueezy (store kloom). period: 'month' = suscripción, ausente = compra única. decir = frases de ejemplo (lo que el usuario le DICE a HARVIS) — sin esto nadie sabe cómo usar lo que compró.",
+  "_comment": "Catálogo de la tienda del HUD. La app lo lee de raw.githubusercontent en cada apertura: agregar una skill acá la publica al instante, sin release. url = checkout en PayPal (Worker harvis-store, repo harvis-skills/store-worker; el sku tiene que existir en su CATALOG). period: 'month' = suscripción, ausente = compra única. decir = frases de ejemplo (lo que el usuario le DICE a HARVIS) — sin esto nadie sabe cómo usar lo que compró.",
   "version": 1,
   "skills": [
     {
@@ -24,7 +24,7 @@
           "Harvis, how am I doing with French?"
         ]
       },
-      "url_paused": "https://kloom.lemonsqueezy.com/checkout/buy/9d0dc732-743e-4481-8e1e-48b7f11e8372"
+      "url": "https://harvis-store.kloomstudio.com.ar/buy?sku=profesor-idiomas"
     },
     {
       "id": "notas-vault",
@@ -47,7 +47,7 @@
           "Harvis, search my notes for anything about taxes"
         ]
       },
-      "url_paused": "https://kloom.lemonsqueezy.com/checkout/buy/2664d3c8-6348-4e51-aaee-ae47666c841c"
+      "url": "https://harvis-store.kloomstudio.com.ar/buy?sku=notas-vault"
     },
     {
       "id": "reuniones",
@@ -72,7 +72,7 @@
           "Harvis, summarize the meeting"
         ]
       },
-      "url_paused": "https://kloom.lemonsqueezy.com/checkout/buy/88e82ea4-9496-45be-9505-7ee66213bfd5"
+      "url": "https://harvis-store.kloomstudio.com.ar/buy?sku=reuniones"
     },
     {
       "id": "macros",
@@ -99,12 +99,11 @@
           "Harvis, repeat the teams one every 2 minutes for 8 hours"
         ]
       },
-      "url_paused": "https://kloom.lemonsqueezy.com/checkout/buy/219b2fac-98a5-4de1-b260-dd1ed4dfe0f1"
+      "url": "https://harvis-store.kloomstudio.com.ar/buy?sku=macros"
     },
     {
       "id": "cripto",
       "price": "USD 9",
-      "_ls": "producto 1302826",
       "name": {
         "es": "Cripto en vivo",
         "en": "Live crypto"
@@ -125,7 +124,7 @@
           "Harvis, let me know when bitcoin crosses 120k"
         ]
       },
-      "url_paused": "https://kloom.lemonsqueezy.com/checkout/buy/cf9abada-a9ee-421d-ad2c-9e92be81426a"
+      "url": "https://harvis-store.kloomstudio.com.ar/buy?sku=cripto"
     }
   ]
 }
